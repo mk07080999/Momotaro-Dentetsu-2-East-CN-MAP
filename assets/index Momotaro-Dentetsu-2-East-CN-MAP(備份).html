@@ -1,0 +1,1940 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>桃太郎電鐵2-地圖攻略-東日本篇2.0</title>
+
+  <!-- Leaflet 样式 -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/1.6.0/Control.FullScreen.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.css" />
+
+  <style>
+  .leaflet-control-layers-overlays label {
+  font-size: 16px;   /* 想要的大小 */
+}
+    /* 地圖容器 */
+    #map {
+      height: 600px;
+      width: 100%;
+      border: 2px solid rgba(51,51,51,0.31);
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    /* 地圖標籤文字 */
+    .scroll-map-div-icon-label {
+      color: white;
+      padding: 4px;
+      border-radius: 10px;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    /* 搜尋容器 */
+    .search-box {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      z-index: 1001;
+    }
+	 /* 把這段加進來 */
+    .bordered-table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    .bordered-table td,
+    .bordered-table th {
+      border: 1px solid #333;
+      padding: 4px 8px;
+    }
+
+    /* 搜尋按鈕 */
+    #toggleSearchBtn,
+    #closeSearchBtn {
+      font-size: 24px;
+      width: 48px;
+      height: 48px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.95);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s;
+    }
+
+    #toggleSearchBtn:hover,
+    #closeSearchBtn:hover {
+      transform: scale(1.1);
+    }
+
+    /* 搜尋欄容器 */
+    #searchContainer {
+      display: none;
+      margin-top: 6px;
+      background: rgba(255,255,255,0.95);
+      padding: 6px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      min-width: 90px;
+    }
+
+    #searchContainer input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      font-size: 16px;
+      margin-bottom: 4px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    #searchContainer button {
+      font-size: 16px;
+      margin: 2px 2px 2px 0;
+      padding: 3px 6px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      background: #ffcccc;
+    }
+
+    #searchContainer button:hover {
+      background: #ddd;
+    }
+
+    /* 搜尋結果列表 */
+    .search-results {
+      max-height: 160px;
+      overflow-y: auto;
+      margin-top: 4px;
+      font-size: 16px;
+    }
+
+    .search-results div {
+      padding: 4px;
+      cursor: pointer;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .search-results div:hover {
+      background: #f0f0f0;
+    }
+  /* —— 在這裡新增下拉選單字體大小 —— */
+  #searchContainer select {
+    font-size: 18px;      /* 字體大小，可調整 */
+    padding: 6px 8px;     /* 內距 */
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+#dropdown2 {
+  display: none;
+}
+/* 下方搜尋框 CSS */
+#searchContainerBottom {
+  display: none;
+  background: rgba(255,255,255,0.95);
+  padding: 6px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  min-width: 90px;
+}
+
+#searchContainerBottom input,
+#searchContainerBottom select,
+#searchContainerBottom button {
+  font-size: 16px;
+}
+
+.search-results#searchResultsBottom div:hover {
+  background: #f0f0f0;
+}
+/* 只放大下方搜尋功能的按鈕 */
+#toggleSearchBtnBottom,
+#closeSearchBtnBottom {
+  font-size: 32px;   /* 放大圖案 */
+  width: 60px;       /* 按鈕寬度 */
+  height: 60px;      /* 按鈕高度 */
+}
+/* 下方搜尋框的文字都大一點 */
+#searchContainerBottom input,
+#searchContainerBottom select,
+#searchContainerBottom button {
+  font-size: 20px;   /* 調整成你想要的大小 */
+}
+
+/* 特別改「清單列表」按鈕顏色 */
+#japaneseListBtnBottom {
+  background-color: #4172a3;  /* 浅藍色，也可改成其他顏色 */
+  color: white;               /* 文字白色 */
+  font-weight: bold;
+}
+
+#japaneseListBtnBottom:hover {
+  background: #5a9bd5;  /* 滑鼠移上去顏色更深 */
+}
+
+
+  </style>
+</head>
+<body>
+<div id="map" style="position: relative;">
+  <div class="search-box" id="searchBox">
+    <button id="toggleSearchBtn">🔍</button>
+    <div id="searchContainer">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+        <button id="closeSearchBtn">🔍↩</button>
+        <!-- 下拉選單1 -->
+        <select id="dropdown1">
+          <option value="station">物件車站</option>
+          <option value="market">卡片賣場</option>
+          <option value="city">都道府縣廳</option>
+		  <option value="heroes">歷史英雄</option>
+        <option value="haiku">八大俳句</option>
+        <option value="mart">八大市場</option>
+  	      <option value="sp">各類事件</option>
+        </select>
+
+        <!-- 下拉選單2 -->
+        <select id="dropdown2">
+          <!-- 根據選擇動態改變內容 -->
+        </select>
+
+      </div>
+              <input type="text" id="searchInput" placeholder="搜尋...">
+      <div style="margin-top:4px;">
+        <button id="clearSearchBtn">清除所有結果</button>
+        <button id="japaneseListBtn">📋 日文地標</button>
+      </div>
+      <div class="search-results" id="searchResults"></div>
+    </div>
+  </div>
+</div>
+<!-- 在地圖容器外，放置下方搜尋框 -->
+<div class="search-box" id="searchBoxBottom" style="position:relative; margin-top:10px;">
+  <button id="toggleSearchBtnBottom">🔍</button>
+  <div id="searchContainerBottom">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+      <button id="closeSearchBtnBottom">🔍↩</button>
+      <!-- 下拉選單1 -->
+      <select id="dropdown1Bottom">
+        <option value="station">物件車站</option>
+        <option value="market">卡片賣場</option>
+        <option value="city">都道府縣廳</option>
+        <option value="heroes">歷史英雄</option>
+        <option value="haiku">八大俳句</option>
+        <option value="mart">八大市場</option>
+        <option value="sp">各類事件</option>
+      </select>
+    </div>
+    <input type="text" id="searchInputBottom" placeholder="搜尋...">
+    <div style="margin-top:4px;">
+      <button id="clearSearchBtnBottom">清除</button>
+      <button id="japaneseListBtnBottom">清單列表</button>
+    </div>
+    <div class="search-results" id="searchResultsBottom"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.fullscreen@1.6.0/Control.FullScreen.js"></script>
+<script src="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.js"></script>
+
+<script>
+  // 初始化地圖
+  var map = L.map('map', {
+    crs: L.CRS.Simple,
+    zoomDelta: 1,
+    maxZoom: 4,
+    minZoom: -2,
+    zoomControl: false
+  }).setView([500, 400], -0.5);
+
+  // 自訂圖示
+ var icons = {
+   //都道府縣廳
+    phoenix_city: L.icon({
+      iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-city.svg',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+      shadowSize: [41, 41]
+    }),
+	//卡片賣場1-49年2
+    phoenix_shop0Y: L.icon({
+      iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-shop-before.svg',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+      shadowSize: [41, 41]
+    }),
+	//歷史英雄2
+    phoenix_hero: L.icon({
+      iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-hero.svg',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+      shadowSize: [41, 41]
+    }),
+	//搭乘直昇機站2
+    phoenix_ramp: L.icon({
+      iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-ramp.svg',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+      shadowSize: [41, 41]
+    }),
+	//重置周遊車站2
+    phoenix_battery: L.icon({
+      iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-battery.svg',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+      shadowSize: [41, 41]
+    }),
+	//卡片複製車站2
+    phoenix_copy: L.icon({
+      iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-copy.svg',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+      shadowSize: [41, 41]
+    }),
+	//抽獎周遊車站2
+    phoenix_lottery: L.icon({
+      iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-lottery.svg',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+      shadowSize: [41, 41]
+    }),
+	//好卡片車站2
+    phoenix_ncard: L.icon({
+      iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-ncard.svg',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+      shadowSize: [41, 41]
+    }),
+	//卡片賣場50年後2
+   phoenix_shop50Y: L.icon({
+    iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-shop-now.svg',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+    shadowSize: [41, 41]
+  }),
+  //八大拉麵
+  phoenix_udon: L.icon({
+    iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/map6.0/marker-icon-6-0-udon.svg',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+    shadowSize: [41, 41]
+  }),
+  //八大瀑布
+  phoenix_fall: L.icon({
+    iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/map6.0/marker-icon-6-0-fall.svg',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+    shadowSize: [41, 41]
+  }),
+  //鐵道站
+  phoenix_railway: L.icon({
+    iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-icon-2x-s-1-railway.svg',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+    shadowSize: [41, 41]
+  }),
+  //銀行
+  phoenix_bank: L.icon({
+    iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-icon-2x-s-1-bank',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+    shadowSize: [41, 41]
+  }),
+  //名產怪獸2
+  phoenix_monster: L.icon({
+    iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-monster.svg',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+    shadowSize: [41, 41]
+  }),
+  //機場車站2
+  phoenix_sky: L.icon({
+    iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-sky.svg',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+    shadowSize: [41, 41]
+  }),
+  //剝奪卡車站2-NEW1
+  phoenix_steal: L.icon({
+    iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-steal.svg',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+    shadowSize: [41, 41]
+  }),
+  //雪鏟車賣場車站2-NEW2-東日本
+  phoenix_shop_s: L.icon({
+    iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-shop-s.svg',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+    shadowSize: [41, 41]
+  }),
+  //雪鏟車賣場車站2(50Y)-NEW2.5-東日本
+  phoenix_shop_s50Y: L.icon({
+    iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-shop-s-now.svg',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+    shadowSize: [41, 41]
+  }),
+  //潛水艇車站2-NEW3-西日本
+  phoenix_unsea: L.icon({
+    iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-unsea.svg',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+    shadowSize: [41, 41]
+  }),
+  //乘船車站-改潛水車站-NEW4-可刪除
+  phoenix_sea: L.icon({
+    iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-unsea.svg',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+    shadowSize: [41, 41]
+  }),
+  //和牛-西日本-NEW
+  phoenix_cow: L.icon({
+    iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-cow.svg',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+    shadowSize: [41, 41]
+  }),
+  //古城-西日本-NEW
+  phoenix_town: L.icon({
+    iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-town.svg',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+    shadowSize: [41, 41]
+  }),
+  //糖-西日本-NEW
+  phoenix_sugar: L.icon({
+    iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-sugar.svg',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+    shadowSize: [41, 41]
+  }),
+  //俳句-東日本-NEW
+  phoenix_haiku: L.icon({
+    iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-haiku.svg',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+    shadowSize: [41, 41]
+  }),
+  //市場-東日本-NEW
+  phoenix_mart: L.icon({
+    iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-mart.svg',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+    shadowSize: [41, 41]
+  }),
+  //事件-NEW
+  phoenix_sp: L.icon({
+    iconUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/map2-marker-icon-1-0-sp.svg',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images/marker-shadow.png',
+    shadowSize: [41, 41]
+  }),
+  // 自訂圖示 最後位置要保留
+  };
+
+
+  // 放大縮小控制
+  L.control.zoom({ position: 'topleft' }).addTo(map);
+
+  // 全螢幕控制
+  map.addControl(L.control.fullscreen({ position: 'topleft' }));
+
+  // 調整全螢幕按鈕位置
+  document.head.appendChild(
+    Object.assign(document.createElement('style'), {
+      innerHTML: `.leaflet-top.leaflet-left .leaflet-control-fullscreen { margin-top: 45px; }`
+    })
+  );
+
+  // 地圖範圍
+  var bounds = [[0, 0], [2000, 1250]];
+  map.setMaxBounds(null);
+
+  // 主圖層
+  var mainOverlay = L.imageOverlay(
+    'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/MAP2_D_7850_80_1_5.jpg',
+    bounds
+  ).addTo(map);
+
+  // 小地圖圖層
+  var miniMapLayer = L.imageOverlay(
+    'https://phoenix-open-image.s3.ap-southeast-2.amazonaws.com/images2/MAP2_D_7850_80_1_5.jpg',
+    bounds,
+    { interactive: false, crossOrigin: false, noWrap: true }
+  );
+
+  // 小地圖控制
+  new L.Control.MiniMap(miniMapLayer, {
+    toggleDisplay: true,
+    minimized: false,
+    position: 'bottomright'
+  }).addTo(map);
+
+  // 標記顏色對應
+  var groupColors = {
+  'A': 'rgba(0, 100, 60, 1)',      // 滋賀 - 深綠
+  'B': 'rgba(0, 70, 140, 1)',      // 三重 - 深藍
+  'C': 'rgba(160, 40, 90, 1)',     // 京都府 - 暗紫紅
+  'D': 'rgba(180, 90, 0, 1)',      // 奈良 - 深金黃
+  'E': 'rgba(220, 30, 30, 1)',     // 大阪府 - 飽和紅（大縣市）
+  'F': 'rgba(120, 0, 160, 1)',     // 兵庫 - 紫色（大縣市）
+  'G': 'rgba(0, 90, 90, 1)',       // 和歌山 - 深青綠
+  'H': 'rgba(184, 115, 51, 1)',       // 鳥取 - 古銅
+  'I': 'rgba(180, 50, 90, 1)',    // 岡山 - 暗玫瑰紫
+  'J': 'rgba(0, 70, 130, 1)',      // 香川 - 靛藍
+  'K': 'rgba(0, 120, 80, 1)',      // 德島 - 森林綠
+  'L': 'rgba(120, 0, 100, 1)',     // 愛媛 - 紫紅
+  'M': 'rgba(90, 0, 140, 1)',      // 高知 - 深紫
+  'N': 'rgba(0, 50, 110, 1)',      // 島根 - 深藍
+  'O': 'rgba(0, 100, 80, 1)',   // 廣島 - 深青綠
+  'P': 'rgba(160, 0, 60, 1)',   // 山口 - 紅紫色
+  'Q': 'rgba(0, 100, 180, 1)',     // 福岡 - 飽和藍（大縣市）
+  'R': 'rgba(200, 80, 0, 1)',      // 大分 - 深橙
+  'S': 'rgba(0, 90, 60, 1)',       // 宮崎 - 深青綠
+  'T': 'rgba(130, 0, 100, 1)',     // 佐賀 - 紫紅
+  'U': 'rgba(0, 70, 130, 1)',      // 長崎 - 靛藍
+  'V': 'rgba(200, 50, 50, 1)',     // 熊本 - 飽和紅（大縣市）
+  'W': 'rgba(130, 0, 160, 1)',   // 鹿兒島 - 紫色
+  'X': 'rgba(0, 120, 200, 1)'    // 沖繩 - 青藍色
+  };
+
+  // 自訂文字圖示函式
+  function createCustomIcon(label, fontSize = 10, backgroundColor = 'rgba(210,34,34,0.91)') {
+    var textWidth = label.length * fontSize * 0.8;
+    var width = Math.max(20, textWidth + 6);
+    var height = Math.max(15, fontSize + 2);
+
+    return L.divIcon({
+      className: 'scroll-map-div-icon-label',
+      html: `<div style="font-size:${fontSize}px;width:${width}px;height:${height}px;background-color:${backgroundColor};">${label}</div>`,
+      iconSize: [width, height],
+      iconAnchor: [width / 2, height / 2]
+    });
+  }
+// 測試資料
+// 下方搜尋框 JS
+function toggleSearchBottom(show) {
+  document.getElementById('searchContainerBottom').style.display = show ? 'block' : 'none';
+  document.getElementById('toggleSearchBtnBottom').style.display = show ? 'none' : 'inline-block';
+  if (show) document.getElementById('searchInputBottom').focus();
+}
+
+document.getElementById('toggleSearchBtnBottom').onclick = () => toggleSearchBottom(true);
+document.getElementById('closeSearchBtnBottom').onclick = () => toggleSearchBottom(false);
+
+document.getElementById('searchInputBottom').addEventListener('input', function () {
+  showResultsBottom(this.value.trim());
+});
+
+document.getElementById('clearSearchBtnBottom').addEventListener('click', function () {
+  // 清空搜尋欄位
+  document.getElementById('searchInputBottom').value = "";
+  document.getElementById('searchResultsBottom').innerHTML = "";
+
+  // 關閉所有 popup
+  activePopups.forEach(p => map.closePopup(p));
+  activePopups = [];
+
+  // 清除所有顯示的坐標
+  shownCoords.clear();
+});
+
+
+document.getElementById('japaneseListBtnBottom').addEventListener('click', () => {
+  showJapaneseListBottom(getSearchKeyByCategory(document.getElementById('dropdown1Bottom').value));
+});
+
+// 複製左下功能的 showResults 與 showJapaneseList 函數
+function showResultsBottom(keyword) {
+  const resultsDiv = document.getElementById('searchResultsBottom');
+  resultsDiv.innerHTML = "";
+  if (!keyword) return;
+
+  const results = markers.filter(m => m.name.includes(keyword));
+  if (results.length === 0) {
+    resultsDiv.innerHTML = "<div>找不到結果</div>";
+    return;
+  }
+
+  results.forEach(r => {
+    const div = document.createElement("div");
+    div.textContent = r.name;
+    div.onclick = function () {
+      map.setView(r.coords, 2);
+      L.popup().setLatLng(r.coords).setContent("📍 " + r.name).openOn(map);
+    };
+    resultsDiv.appendChild(div);
+  });
+}
+
+function showJapaneseListBottom(searchKey) {
+  const resultsDiv = document.getElementById('searchResultsBottom');
+  resultsDiv.innerHTML = "";
+  markers.forEach(m => {
+    if (m.marker.posData[searchKey]) {
+      const div = document.createElement("div");
+      div.textContent = m.name + " (" + m.marker.posData[searchKey] + ")";
+      div.onclick = function () {
+        map.setView(m.coords, 2);
+        L.popup().setLatLng(m.coords).setContent("📍 " + m.name).openOn(map);
+      };
+      resultsDiv.appendChild(div);
+    }
+  });
+}
+
+// 根據選擇的類別更新按鈕名稱和功能
+function updateSearchButton(selectedCategory) {
+  const searchButton = document.getElementById('japaneseListBtn');
+  let buttonLabel = "";
+  let searchKey = "";
+
+  // 根據選擇的類別改變按鈕名稱和搜尋條件
+  switch (selectedCategory) {
+    case "station":
+      buttonLabel = "日文物件車站清單";
+      searchKey = "jpname";  // 搜尋 'jpname'
+      break;
+    case "market":
+      buttonLabel = "卡片賣場車站清單";
+      searchKey = "jpcard";  // 搜尋 'jpcard'
+      break;
+    case "city":
+      buttonLabel = "都道府縣廳清單";
+      searchKey = "jpcity";  
+      break;
+    case "heroes":
+      buttonLabel = "歷史英雄清單";
+      searchKey = "jphero"; 
+      break;	 
+    case "haiku":
+      buttonLabel = "八大俳句清單";
+      searchKey = "jphaiku";  
+      break;
+    case "mart":
+      buttonLabel = "八大市場清單";
+      searchKey = "jpmart";  
+      break;
+    case "sp":
+      buttonLabel = "各類事件清單";
+      searchKey = "jpsp";  
+      break;	  
+    default:
+      buttonLabel = "日文地標";
+      searchKey = "jpname";
+      break;
+  }
+
+  // 更新按鈕名稱
+  searchButton.textContent = buttonLabel;
+
+  // 更新搜尋功能使用的關鍵字
+  searchButton.onclick = function() {
+    showJapaneseList(searchKey);  // 傳遞對應的 key 進行搜尋
+  };
+}
+
+// 各地點資料
+var positions = {
+  A: [
+	//北海道
+	{ coords: [1910.75, 783.81], "label": "礼文", "info": "", group: 'A', mk: 'A' , jpname: "禮文"},
+	{ coords: [1896.00, 797.25], "label": "利尻", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1910.56, 838.88], "label": "稚内", "info": "", group: 'A', mk: 'A' , jpname: "稚內"},
+	{ coords: [1896.13, 880.44], "label": "猿払", "info": "", group: 'A', mk: 'A' , jpname: "猿拂"},
+	{ coords: [1881.75, 894.13], "label": "浜頓別", "info": "", group: 'A', mk: 'A' , jpname: "濱頓別"},
+	{ coords: [1867.31, 907.88], "label": "枝幸", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1795.31, 949.50], "label": "興部", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1795.31, 963.19], "label": "紋別", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1766.38, 991.19], "label": "湧別", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1751.88, 990.88], "label": "遠軽", "info": "", group: 'A', mk: 'A' , jpname: "遠輕"},
+	{ coords: [1723.00, 1018.56], "label": "北見", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1737.44, 1032.50], "label": "常呂", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1737.44, 1060.06], "label": "網走", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1723.25, 1046.25], "label": "美幌", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1723.31, 1073.94], "label": "斜里", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1751.94, 1115.31], "label": "知床", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1737.56, 1129.13], "label": "羅臼", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1694.31, 1115.31], "label": "標津", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1665.38, 1143.06], "label": "別海", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1651.00, 1170.75], "label": "根室", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1622.31, 1115.44], "label": "浜中", "info": "", group: 'A', mk: 'A' , jpname: "濱中"},
+	{ coords: [1593.19, 1073.81], "label": "厚岸", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1593.19, 1060.25], "label": "釧路", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1636.69, 1059.94], "label": "標茶", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1679.81, 1073.94], "label": "弟子屈", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1680.06, 1087.75], "label": "摩周", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1679.81, 1046.13], "label": "阿寒", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1679.75, 1018.69], "label": "陸別", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1607.88, 1004.63], "label": "池田", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1622.25, 1004.75], "label": "本別", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1636.69, 1004.63], "label": "足寄", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1651.06, 977.06], "label": "士幌", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1607.81, 977.13], "label": "音更", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1593.25, 977.25], "label": "帯広", "info": "", group: 'A', mk: 'A' , jpname: "帶廣"},
+	{ coords: [1593.31, 963.19], "label": "芽室", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1607.81, 935.75], "label": "新得", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1550.06, 949.25], "label": "中札内", "info": "", group: 'A', mk: 'A' , jpname: "中札內"},
+	{ coords: [1506.75, 976.94], "label": "広尾", "info": "", group: 'A', mk: 'A' , jpname: "廣尾"},
+	{ coords: [1492.31, 935.69], "label": "襟裳", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1521.00, 922.00], "label": "様似", "info": "", group: 'A', mk: 'A' , jpname: "樣似"},
+	{ coords: [1521.13, 907.88], "label": "浦河", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1535.56, 894.00], "label": "静内", "info": "", group: 'A', mk: 'A' , jpname: "靜內"},
+	{ coords: [1550.19, 866.44], "label": "日高", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1564.56, 838.88], "label": "苫小牧", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1607.56, 839.06], "label": "北広島", "info": "", group: 'A', mk: 'A' , jpname: "北廣島"},
+	{ coords: [1622.38, 838.88], "label": "江別", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1636.69, 852.69], "label": "岩見沢", "info": "", group: 'A', mk: 'A' , jpname: "岩見澤"},
+	{ coords: [1622.13, 866.38], "label": "夕張", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1665.38, 866.56], "label": "砂川", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1680.06, 866.56], "label": "滝川", "info": "", group: 'A', mk: 'A' , jpname: "瀧川"},
+	{ coords: [1650.88, 894.06], "label": "富良野", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1665.31, 894.13], "label": "美瑛", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1679.75, 880.38], "label": "芦別", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1679.88, 852.69], "label": "新十津川", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1708.63, 866.69], "label": "深川", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1723.19, 894.13], "label": "旭川", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1723.19, 908.06], "label": "当麻", "info": "", group: 'A', mk: 'A' , jpname: "當麻"},
+	{ coords: [1737.56, 921.94], "label": "上川", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1751.94, 894.06], "label": "和寒", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1751.88, 880.56], "label": "幌加内", "info": "", group: 'A', mk: 'A' , jpname: "幌加內"},
+	{ coords: [1766.44, 894.06], "label": "士別", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1780.81, 894.25], "label": "名寄", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1795.13, 894.25], "label": "美深", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1838.63, 880.38], "label": "音威子府", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1852.81, 852.75], "label": "天塩", "info": "", group: 'A', mk: 'A' , jpname: "天鹽"},
+	{ coords: [1723.06, 839.00], "label": "留萌", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1708.56, 838.81], "label": "増毛", "info": "", group: 'A', mk: 'A' , jpname: "增毛"},
+	{ coords: [1651.00, 825.19], "label": "ロイズ", "info": "", group: 'A', mk: 'A' , jpname: "羅伊斯"},
+	{ coords: [1650.94, 811.38], "label": "石狩", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1622.13, 811.38], "label": "札幌", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1607.75, 811.44], "label": "ススキノ", "info": "", group: 'A', mk: 'A' , jpname: "薄野"},
+	{ coords: [1550.19, 811.44], "label": "白老", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1550.13, 797.50], "label": "登別", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1521.19, 783.75], "label": "室蘭", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1535.69, 755.94], "label": "伊達", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1564.50, 756.00], "label": "洞爺湖", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1579.00, 769.94], "label": "留寿都", "info": "", group: 'A', mk: 'A' , jpname: "留壽都"},
+	{ coords: [1593.31, 769.69], "label": "真狩村", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1607.88, 783.75], "label": "定山渓", "info": "", group: 'A', mk: 'A' , jpname: "定山溪"},
+	{ coords: [1607.69, 797.50], "label": "羊ヶ丘", "info": "", group: 'A', mk: 'A' , jpname: "羊之丘"},
+	{ coords: [1636.56, 783.63], "label": "小樽", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1636.56, 769.75], "label": "余市", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1651.13, 742.06], "label": "積丹", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1622.19, 769.88], "label": "仁木", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1593.25, 755.94], "label": "ニセコ", "info": "", group: 'A', mk: 'A' , jpname: "二世古"},
+	{ coords: [1607.81, 742.25], "label": "岩内", "info": "", group: 'A', mk: 'A' , jpname: "岩內"},
+	{ coords: [1607.81, 728.25], "label": "蘭越", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1550.13, 714.50], "label": "長万部", "info": "", group: 'A', mk: 'A' , jpname: "長萬部"},
+	{ coords: [1521.19, 714.31], "label": "八雲", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1506.94, 659.06], "label": "奥尻", "info": "", group: 'A', mk: 'A' , jpname: "奧尻"},
+	{ coords: [1463.63, 700.69], "label": "江差", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1434.88, 700.50], "label": "松前", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1435.00, 714.50], "label": "福島町", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1463.63, 755.88], "label": "函館", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1463.63, 783.63], "label": "恵山", "info": "", group: 'A', mk: 'A' , jpname: "惠山"},
+	{ coords: [1477.94, 756.00], "label": "大沼", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	{ coords: [1492.50, 755.75], "label": "森", "info": "", group: 'A', mk: 'A' , jpname: ""},
+	//青森
+	{ coords: [1398.44, 783.63], "label": "大間", "info": "", group: 'B', mk: 'B' , jpname: ""},
+	{ coords: [1355.13, 811.60], "label": "むつ", "info": "", group: 'B', mk: 'B' , jpname: "陸奧"},
+	{ coords: [1326.31, 797.54], "label": "菜の花", "info": "", group: 'B', mk: 'B' , jpname: "菜之花"},
+	{ coords: [1297.56, 797.48], "label": "陸奥横浜", "info": "", group: 'B', mk: 'B' , jpname: "陸奧橫濱"},
+	{ coords: [1283.00, 797.66], "label": "野辺地", "info": "", group: 'B', mk: 'B' , jpname: "野邊地"},
+	{ coords: [1254.25, 811.60], "label": "おいらせ", "info": "", group: 'B', mk: 'B' , jpname: ""},
+	{ coords: [1254.44, 825.23], "label": "三沢", "info": "", group: 'B', mk: 'B' , jpname: "三澤"},
+	{ coords: [1240.00, 825.23], "label": "八戸", "info": "", group: 'B', mk: 'B' , jpname: "八戶"},
+	{ coords: [1225.50, 825.23], "label": "南部", "info": "", group: 'B', mk: 'B' , jpname: ""},
+	{ coords: [1225.56, 811.41], "label": "三戸", "info": "", group: 'B', mk: 'B' , jpname: "三戶"},
+	{ coords: [1225.56, 797.48], "label": "田子", "info": "", group: 'B', mk: 'B' , jpname: ""},
+	{ coords: [1239.81, 769.98], "label": "十和田湖", "info": "", group: 'B', mk: 'B' , jpname: ""},
+	{ coords: [1254.25, 756.04], "label": "八甲田", "info": "", group: 'B', mk: 'B' , jpname: ""},
+	{ coords: [1268.81, 756.04], "label": "青森", "info": "", group: 'B', mk: 'B' , jpname: ""},
+	{ coords: [1268.88, 769.98], "label": "浅虫温泉", "info": "", group: 'B', mk: 'B' , jpname: "淺蟲溫泉"},
+	{ coords: [1283.06, 769.91], "label": "平内", "info": "", group: 'B', mk: 'B' , jpname: "平內"},
+	{ coords: [1326.56, 728.41], "label": "蟹田", "info": "", group: 'B', mk: 'B' , jpname: ""},
+	{ coords: [1355.31, 714.54], "label": "竜飛", "info": "", group: 'B', mk: 'B' , jpname: "龍飛"},
+	{ coords: [1341.00, 700.85], "label": "十三湖", "info": "", group: 'B', mk: 'B' , jpname: ""},
+	{ coords: [1312.13, 714.48], "label": "金木", "info": "", group: 'B', mk: 'B' , jpname: ""},
+	{ coords: [1297.69, 714.54], "label": "五所川原", "info": "", group: 'B', mk: 'B' , jpname: ""},
+	{ coords: [1297.69, 700.79], "label": "木造", "info": "", group: 'B', mk: 'B' , jpname: ""},
+	{ coords: [1283.19, 686.91], "label": "鰺ヶ沢", "info": "", group: 'B', mk: 'B' , jpname: "鰺澤町"},
+	{ coords: [1268.88, 659.35], "label": "深浦", "info": "", group: 'B', mk: 'B' , jpname: ""},
+	{ coords: [1283.25, 714.66], "label": "鶴田", "info": "", group: 'B', mk: 'B' , jpname: ""},
+	{ coords: [1268.81, 714.54], "label": "板柳", "info": "", group: 'B', mk: 'B' , jpname: ""},
+	{ coords: [1254.44, 700.91], "label": "岩木山", "info": "", group: 'B', mk: 'B' , jpname: ""},
+	{ coords: [1239.81, 714.48], "label": "弘前", "info": "", group: 'B', mk: 'B' , jpname: ""},
+	{ coords: [1254.50, 728.48], "label": "黒石", "info": "", group: 'B', mk: 'B' , jpname: "黑石"},
+	{ coords: [1240.00, 728.41], "label": "田舎館", "info": "", group: 'B', mk: 'B' , jpname: "田舍館"},
+	{ coords: [1211.19, 728.29], "label": "大鰐", "info": "", group: 'B', mk: 'B' , jpname: "大鱷"},
+	//岩手
+	{ coords: [1182.25, 880.60], "label": "久慈", "info": "", group: 'C', mk: 'C' , jpname: ""},
+	{ coords: [1124.69, 866.60], "label": "岩泉", "info": "", group: 'C', mk: 'C' , jpname: ""},
+	{ coords: [1110.25, 880.48], "label": "宮古", "info": "", group: 'C', mk: 'C' , jpname: ""},
+	{ coords: [1110.06, 894.16], "label": "浄土ヶ浜", "info": "", group: 'C', mk: 'C' , jpname: "淨土之濱"},
+	{ coords: [1066.81, 866.60], "label": "大槌", "info": "", group: 'C', mk: 'C' , jpname: ""},
+	{ coords: [1052.50, 866.60], "label": "釜石", "info": "", group: 'C', mk: 'C' , jpname: ""},
+	{ coords: [994.69, 866.66], "label": "大船渡", "info": "", group: 'C', mk: 'C' , jpname: ""},
+	{ coords: [994.81, 852.98], "label": "陸前高田", "info": "", group: 'C', mk: 'C' , jpname: ""},
+	{ coords: [980.25, 797.48], "label": "一関", "info": "", group: 'C', mk: 'C' , jpname: "一關"},
+	{ coords: [994.75, 797.54], "label": "平泉", "info": "", group: 'C', mk: 'C' , jpname: ""},
+	{ coords: [1023.56, 797.60], "label": "北上", "info": "", group: 'C', mk: 'C' , jpname: ""},
+	{ coords: [1052.44, 797.54], "label": "花巻", "info": "", group: 'C', mk: 'C' , jpname: "花卷"},
+	{ coords: [1052.44, 839.04], "label": "遠野", "info": "", group: 'C', mk: 'C' , jpname: ""},
+	{ coords: [1110.25, 797.41], "label": "盛岡", "info": "", group: 'C', mk: 'C' , jpname: ""},
+	{ coords: [1110.13, 783.73], "label": "雫石", "info": "", group: 'C', mk: 'C' , jpname: ""},
+	//秋田
+	{ coords: [1196.69, 756.04], "label": "小坂", "info": "", group: 'D', mk: 'D' , jpname: ""},
+	{ coords: [1182.13, 756.16], "label": "鹿角", "info": "", group: 'D', mk: 'D' , jpname: ""},
+	{ coords: [1182.25, 728.35], "label": "大館", "info": "", group: 'D', mk: 'D' , jpname: ""},
+	{ coords: [1210.94, 659.23], "label": "八森", "info": "", group: 'D', mk: 'D' , jpname: ""},
+	{ coords: [1182.13, 659.29], "label": "能代", "info": "", group: 'D', mk: 'D' , jpname: ""},
+	{ coords: [1124.56, 645.41], "label": "男鹿", "info": "", group: 'D', mk: 'D' , jpname: ""},
+	{ coords: [1110.13, 659.29], "label": "秋田", "info": "", group: 'D', mk: 'D' , jpname: ""},
+	{ coords: [1066.81, 645.35], "label": "本荘", "info": "", group: 'D', mk: 'D' , jpname: "本莊"},
+	{ coords: [1009.25, 628.29], "label": "象潟", "info": "", group: 'D', mk: 'D' , jpname: ""},
+	{ coords: [994.75, 742.35], "label": "秋田湯沢", "info": "", group: 'D', mk: 'D' , jpname: "秋田湯澤"},
+	{ coords: [1023.50, 742.35], "label": "横手", "info": "", group: 'D', mk: 'D' , jpname: "橫手"},
+	{ coords: [1052.31, 742.35], "label": "大曲", "info": "", group: 'D', mk: 'D' , jpname: ""},
+	{ coords: [1081.37, 742.35], "label": "角館", "info": "", group: 'D', mk: 'D' , jpname: ""},
+	{ coords: [1110.06, 756.04], "label": "田沢湖", "info": "", group: 'D', mk: 'D' , jpname: "田澤湖"},
+	//宮城
+	{ coords: [980.25, 852.91], "label": "気仙沼", "info": "", group: 'E', mk: 'E' , jpname: "氣仙沼"},
+	{ coords: [966.00, 811.41], "label": "登米", "info": "", group: 'E', mk: 'E' , jpname: ""},
+	{ coords: [966.00, 783.66], "label": "岩出山", "info": "", group: 'E', mk: 'E' , jpname: ""},
+	{ coords: [965.88, 756.10], "label": "鳴子", "info": "", group: 'E', mk: 'E' , jpname: ""},
+	{ coords: [937.06, 797.48], "label": "古川", "info": "", group: 'E', mk: 'E' , jpname: ""},
+	{ coords: [908.19, 783.73], "label": "作並", "info": "", group: 'E', mk: 'E' , jpname: ""},
+	{ coords: [879.25, 728.48], "label": "蔵王", "info": "", group: 'E', mk: 'E' , jpname: "藏王"},
+	{ coords: [850.56, 756.04], "label": "白石", "info": "", group: 'E', mk: 'E' , jpname: ""},
+	{ coords: [879.25, 797.54], "label": "名取", "info": "", group: 'E', mk: 'E' , jpname: ""},
+	{ coords: [893.81, 783.60], "label": "国分町", "info": "", group: 'E', mk: 'E' , jpname: "國分町"},
+	{ coords: [893.81, 797.54], "label": "仙台", "info": "", group: 'E', mk: 'E' , jpname: ""},
+	{ coords: [893.81, 811.41], "label": "多賀城", "info": "", group: 'E', mk: 'E' , jpname: ""},
+	{ coords: [908.06, 811.41], "label": "塩釜", "info": "", group: 'E', mk: 'E' , jpname: "鹽釜"},
+	{ coords: [908.19, 825.16], "label": "松島", "info": "", group: 'E', mk: 'E' , jpname: ""},
+	{ coords: [908.06, 839.04], "label": "石巻", "info": "", group: 'E', mk: 'E' , jpname: "石卷"},
+	{ coords: [908.13, 852.85], "label": "女川", "info": "", group: 'E', mk: 'E' , jpname: ""},
+	//山形
+	{ coords: [922.56, 628.23], "label": "温海", "info": "", group: 'F', mk: 'F' , jpname: "溫海"},
+	{ coords: [951.44, 628.23], "label": "鶴岡", "info": "", group: 'F', mk: 'F' , jpname: ""},
+	{ coords: [980.13, 628.16], "label": "酒田", "info": "", group: 'F', mk: 'F' , jpname: ""},
+	{ coords: [994.69, 628.29], "label": "遊佐", "info": "", group: 'F', mk: 'F' , jpname: ""},
+	{ coords: [965.88, 645.48], "label": "余目", "info": "", group: 'F', mk: 'F' , jpname: "餘目"},
+	{ coords: [965.94, 714.41], "label": "新庄", "info": "", group: 'F', mk: 'F' , jpname: ""},
+	{ coords: [951.50, 728.35], "label": "尾花沢", "info": "", group: 'F', mk: 'F' , jpname: "尾花澤"},
+	{ coords: [951.38, 742.23], "label": "銀山温泉", "info": "", group: 'F', mk: 'F' , jpname: "銀山溫泉"},
+	{ coords: [937.13, 714.48], "label": "村山", "info": "", group: 'F', mk: 'F' , jpname: ""},
+	{ coords: [937.13, 700.73], "label": "河北", "info": "", group: 'F', mk: 'F' , jpname: ""},
+	{ coords: [922.63, 714.54], "label": "東根", "info": "", group: 'F', mk: 'F' , jpname: ""},
+	{ coords: [908.13, 700.79], "label": "寒河江", "info": "", group: 'F', mk: 'F' , jpname: ""},
+	{ coords: [908.13, 714.54], "label": "天童", "info": "", group: 'F', mk: 'F' , jpname: ""},
+	{ coords: [893.81, 714.41], "label": "山形", "info": "", group: 'F', mk: 'F' , jpname: ""},
+	{ coords: [879.25, 714.54], "label": "上山", "info": "", group: 'F', mk: 'F' , jpname: ""},
+	{ coords: [850.50, 714.60], "label": "米沢", "info": "", group: 'F', mk: 'F' , jpname: "米澤"},
+	{ coords: [864.81, 673.23], "label": "小国", "info": "", group: 'F', mk: 'F' , jpname: "小國"},
+	//福島
+	{ coords: [850.50, 866.60], "label": "相馬", "info": "", group: 'G', mk: 'G' , jpname: ""},
+	{ coords: [836.00, 866.60], "label": "飯舘", "info": "", group: 'G', mk: 'G' , jpname: ""},
+	{ coords: [821.75, 866.66], "label": "浪江", "info": "", group: 'G', mk: 'G' , jpname: ""},
+	{ coords: [778.38, 866.60], "label": "いわき", "info": "", group: 'G', mk: 'G' , jpname: "磐城"},
+	{ coords: [836.00, 728.35], "label": "福島", "info": "", group: 'G', mk: 'G' , jpname: ""},
+	{ coords: [807.19, 728.73], "label": "郡山", "info": "", group: 'G', mk: 'G' , jpname: ""},
+	{ coords: [807.19, 742.48], "label": "三春", "info": "", group: 'G', mk: 'G' , jpname: ""},
+	{ coords: [792.75, 728.48], "label": "須賀川", "info": "", group: 'G', mk: 'G' , jpname: ""},
+	{ coords: [763.94, 728.66], "label": "白河", "info": "", group: 'G', mk: 'G' , jpname: ""},
+	{ coords: [821.69, 700.79], "label": "喜多方", "info": "", group: 'G', mk: 'G' , jpname: ""},
+	{ coords: [807.25, 714.98], "label": "猪苗代", "info": "", group: 'G', mk: 'G' , jpname: "豬苗代"},
+	{ coords: [792.75, 701.04], "label": "会津若松", "info": "", group: 'G', mk: 'G' , jpname: "會津若松"},
+	{ coords: [778.38, 701.10], "label": "大内宿", "info": "", group: 'G', mk: 'G' , jpname: "大內宿"},
+	{ coords: [749.56, 521.35], "label": "只見", "info": "", group: 'G', mk: 'G' , jpname: ""},
+	//新瀉
+	{ coords: [821.75, 407.41], "label": "佐渡", "info": "", group: 'H', mk: 'H' , jpname: ""},
+	{ coords: [720.63, 369.29], "label": "糸魚川", "info": "", group: 'H', mk: 'H' , jpname: ""},
+	{ coords: [720.63, 383.29], "label": "能生", "info": "", group: 'H', mk: 'H' , jpname: ""},
+	{ coords: [735.13, 410.73], "label": "直江津", "info": "", group: 'H', mk: 'H' , jpname: ""},
+	{ coords: [749.63, 410.79], "label": "上越", "info": "", group: 'H', mk: 'H' , jpname: ""},
+	{ coords: [749.56, 438.41], "label": "柏崎", "info": "", group: 'H', mk: 'H' , jpname: ""},
+	{ coords: [749.56, 452.23], "label": "長岡", "info": "", group: 'H', mk: 'H' , jpname: ""},
+	{ coords: [735.06, 452.35], "label": "小千谷", "info": "", group: 'H', mk: 'H' , jpname: ""},
+	{ coords: [735.06, 466.23], "label": "魚沼", "info": "", group: 'H', mk: 'H' , jpname: ""},
+	{ coords: [749.56, 479.91], "label": "燕三条", "info": "", group: 'H', mk: 'H' , jpname: "燕三條"},
+	{ coords: [763.88, 438.48], "label": "出雲崎", "info": "", group: 'H', mk: 'H' , jpname: ""},
+	{ coords: [763.88, 452.29], "label": "寺泊", "info": "", group: 'H', mk: 'H' , jpname: ""},
+	{ coords: [763.88, 493.85], "label": "五泉", "info": "", group: 'H', mk: 'H' , jpname: ""},
+	{ coords: [778.31, 507.54], "label": "新津", "info": "", group: 'H', mk: 'H' , jpname: ""},
+	{ coords: [792.75, 507.48], "label": "新潟", "info": "", group: 'H', mk: 'H' , jpname: ""},
+	{ coords: [792.81, 493.79], "label": "黒埼", "info": "", group: 'H', mk: 'H' , jpname: "黑埼"},
+	{ coords: [807.13, 549.20], "label": "新発田", "info": "", group: 'H', mk: 'H' , jpname: "新發田"},
+	{ coords: [807.38, 594.08], "label": "胎内", "info": "", group: 'H', mk: 'H' , jpname: "胎內"},
+	{ coords: [850.44, 593.83], "label": "村上", "info": "", group: 'H', mk: 'H' , jpname: ""},
+	//茨城
+	{ coords: [763.87, 825.09], "label": "大子", "info": "", group: 'I', mk: 'I' , jpname: ""},
+	{ coords: [735.06, 838.88], "label": "奥久慈", "info": "", group: 'I', mk: 'I' , jpname: "奧久慈"},
+	{ coords: [749.63, 866.50], "label": "北茨城", "info": "", group: 'I', mk: 'I' , jpname: ""},
+	{ coords: [735.13, 866.50], "label": "高萩", "info": "", group: 'I', mk: 'I' , jpname: ""},
+	{ coords: [720.81, 866.56], "label": "日立", "info": "", group: 'I', mk: 'I' , jpname: ""},
+	{ coords: [670.13, 852.75], "label": "常陸太田", "info": "", group: 'I', mk: 'I' , jpname: ""},
+	{ coords: [583.69, 852.81], "label": "水戸", "info": "", group: 'I', mk: 'I' , jpname: "水戶"},
+	{ coords: [583.75, 866.44], "label": "ひたちなか", "info": "", group: 'I', mk: 'I' , jpname: "常陸那珂"},
+	{ coords: [554.75, 839.10], "label": "小美玉", "info": "", group: 'I', mk: 'I' , jpname: ""},
+	{ coords: [540.31, 866.73], "label": "鉾田", "info": "", group: 'I', mk: 'I' , jpname: ""},
+	{ coords: [526.00, 866.66], "label": "鹿嶋", "info": "", group: 'I', mk: 'I' , jpname: ""},
+	{ coords: [511.56, 866.66], "label": "潮来", "info": "", group: 'I', mk: 'I' , jpname: "潮來"},
+	{ coords: [511.69, 852.79], "label": "行方", "info": "", group: 'I', mk: 'I' , jpname: ""},
+	{ coords: [511.75, 811.41], "label": "稲敷", "info": "", group: 'I', mk: 'I' , jpname: "稻敷"},
+	{ coords: [511.56, 784.10], "label": "牛久", "info": "", group: 'I', mk: 'I' , jpname: ""},
+	{ coords: [497.19, 784.16], "label": "竜ヶ崎", "info": "", group: 'I', mk: 'I' , jpname: "龍崎"},
+	{ coords: [540.50, 811.41], "label": "かすみがうら", "info": "", group: 'I', mk: 'I' , jpname: "霞之浦"},
+	{ coords: [540.56, 783.98], "label": "土浦", "info": "", group: 'I', mk: 'I' , jpname: ""},
+	{ coords: [540.50, 770.29], "label": "つくば", "info": "", group: 'I', mk: 'I' , jpname: "筑波"},
+	{ coords: [540.63, 756.35], "label": "坂東", "info": "", group: 'I', mk: 'I' , jpname: ""},
+	{ coords: [526.06, 770.16], "label": "取手", "info": "", group: 'I', mk: 'I' , jpname: ""},
+	{ coords: [583.75, 811.41], "label": "笠間", "info": "", group: 'I', mk: 'I' , jpname: ""},
+	{ coords: [583.81, 770.10], "label": "桜川", "info": "", group: 'I', mk: 'I' , jpname: "櫻川"},
+	{ coords: [583.88, 728.66], "label": "結城", "info": "", group: 'I', mk: 'I' , jpname: ""},
+	{ coords: [554.88, 714.91], "label": "古河", "info": "", group: 'I', mk: 'I' , jpname: ""},
+	{ coords: [554.88, 742.41], "label": "下妻", "info": "", group: 'I', mk: 'I' , jpname: ""},
+	//栃木
+	{ coords: [746.00, 714.79], "label": "黒磯", "info": "", group: 'J', mk: 'J' , jpname: "黑磯"},
+	{ coords: [746.06, 728.73], "label": "那須", "info": "", group: 'J', mk: 'J' , jpname: ""},
+	{ coords: [731.56, 714.98], "label": "塩原", "info": "", group: 'J', mk: 'J' , jpname: "鹽原"},
+	{ coords: [717.13, 701.04], "label": "湯西川", "info": "", group: 'J', mk: 'J' , jpname: ""},
+	{ coords: [702.81, 700.91], "label": "鬼怒川", "info": "", group: 'J', mk: 'J' , jpname: ""},
+	{ coords: [673.81, 700.98], "label": "今市", "info": "", group: 'J', mk: 'J' , jpname: ""},
+	{ coords: [673.94, 645.79], "label": "日光", "info": "", group: 'J', mk: 'J' , jpname: ""},
+	{ coords: [673.75, 628.54], "label": "中禅寺湖", "info": "", group: 'J', mk: 'J' , jpname: "中禪寺湖"},
+	{ coords: [598.13, 628.54], "label": "足利", "info": "", group: 'J', mk: 'J' , jpname: ""},
+	{ coords: [598.19, 659.48], "label": "佐野", "info": "", group: 'J', mk: 'J' , jpname: ""},
+	{ coords: [583.81, 714.85], "label": "小山", "info": "", group: 'J', mk: 'J' , jpname: ""},
+	{ coords: [598.13, 701.10], "label": "栃木", "info": "", group: 'J', mk: 'J' , jpname: ""},
+	{ coords: [612.69, 701.04], "label": "壬生", "info": "", group: 'J', mk: 'J' , jpname: ""},
+	{ coords: [641.50, 700.98], "label": "鹿沼", "info": "", group: 'J', mk: 'J' , jpname: ""},
+	{ coords: [655.94, 714.73], "label": "大谷", "info": "", group: 'J', mk: 'J' , jpname: ""},
+	{ coords: [655.94, 728.66], "label": "宇都宮", "info": "", group: 'J', mk: 'J' , jpname: ""},
+	{ coords: [673.88, 770.23], "label": "烏山", "info": "", group: 'J', mk: 'J' , jpname: ""},
+	{ coords: [688.31, 742.48], "label": "さくら", "info": "", group: 'J', mk: 'J' , jpname: "櫻"},
+	{ coords: [702.94, 742.54], "label": "大田原", "info": "", group: 'J', mk: 'J' , jpname: ""},
+	{ coords: [598.25, 742.60], "label": "真岡", "info": "", group: 'J', mk: 'J' , jpname: ""},
+	{ coords: [598.25, 756.29], "label": "益子", "info": "", group: 'J', mk: 'J' , jpname: ""},
+	{ coords: [612.75, 770.16], "label": "茂木", "info": "", group: 'J', mk: 'J' , jpname: ""},
+	//群馬
+	{ coords: [713.50, 576.60], "label": "谷川", "info": "", group: 'K', mk: 'K' , jpname: ""},
+	{ coords: [684.69, 576.66], "label": "水上温泉", "info": "", group: 'K', mk: 'K' , jpname: "水上溫泉"},
+	{ coords: [684.75, 562.91], "label": "上毛高原", "info": "", group: 'K', mk: 'K' , jpname: ""},
+	{ coords: [655.94, 562.79], "label": "沼田", "info": "", group: 'K', mk: 'K' , jpname: ""},
+	{ coords: [641.38, 562.85], "label": "渋川", "info": "", group: 'K', mk: 'K' , jpname: "澀川"},
+	{ coords: [641.44, 548.91], "label": "伊香保", "info": "", group: 'K', mk: 'K' , jpname: ""},
+	{ coords: [706.44, 465.98], "label": "四万", "info": "", group: 'K', mk: 'K' , jpname: "四萬"},
+	{ coords: [670.31, 438.23], "label": "嬬恋", "info": "", group: 'K', mk: 'K' , jpname: "嬬戀"},
+	{ coords: [670.31, 452.23], "label": "草津", "info": "", group: 'K', mk: 'K' , jpname: ""},
+	{ coords: [612.63, 507.54], "label": "安中榛名", "info": "", group: 'K', mk: 'K' , jpname: ""},
+	{ coords: [598.19, 479.79], "label": "横川", "info": "", group: 'K', mk: 'K' , jpname: "橫川"},
+	{ coords: [598.13, 507.48], "label": "安中", "info": "", group: 'K', mk: 'K' , jpname: ""},
+	{ coords: [583.88, 493.66], "label": "下仁田", "info": "", group: 'K', mk: 'K' , jpname: ""},
+	{ coords: [583.88, 507.48], "label": "富岡", "info": "", group: 'K', mk: 'K' , jpname: ""},
+	{ coords: [569.31, 548.91], "label": "藤岡", "info": "", group: 'K', mk: 'K' , jpname: ""},
+	{ coords: [598.19, 548.85], "label": "高崎", "info": "", group: 'K', mk: 'K' , jpname: ""},
+	{ coords: [598.13, 562.91], "label": "前橋", "info": "", group: 'K', mk: 'K' , jpname: ""},
+	{ coords: [598.19, 593.73], "label": "伊勢崎", "info": "", group: 'K', mk: 'K' , jpname: ""},
+	{ coords: [616.25, 611.16], "label": "桐生", "info": "", group: 'K', mk: 'K' , jpname: ""},
+	{ coords: [630.69, 610.98], "label": "みどり", "info": "", group: 'K', mk: 'K' , jpname: "綠"},
+	//千葉
+	{ coords: [540.69, 700.89], "label": "野田", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [526.19, 742.33], "label": "柏", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [511.88, 728.64], "label": "松戸", "info": "", group: 'L', mk: 'L' , jpname: "松戶"},
+	{ coords: [526.13, 756.20], "label": "我孫子", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [439.75, 742.64], "label": "浦安", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [454.00, 770.14], "label": "船橋", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [453.94, 784.01], "label": "幕張", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [454.00, 797.39], "label": "千葉", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [454.00, 825.14], "label": "佐倉", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [439.50, 838.95], "label": "八街", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [497.44, 852.95], "label": "佐原", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [497.38, 866.51], "label": "香取", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [482.81, 880.51], "label": "旭", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [497.38, 908.01], "label": "銚子", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [410.69, 852.76], "label": "山武", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [367.56, 852.70], "label": "東金", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [353.19, 839.08], "label": "茂原", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [338.63, 839.20], "label": "いすみ", "info": "", group: 'L', mk: 'L' , jpname: "夷隅"},
+	{ coords: [324.44, 825.08], "label": "御宿", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [324.31, 811.39], "label": "勝浦", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [324.44, 797.45], "label": "鴨川", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [310.00, 770.14], "label": "千倉", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [310.00, 756.08], "label": "館山", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [324.38, 756.33], "label": "富浦", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [338.88, 756.33], "label": "富津", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [338.75, 770.20], "label": "君津", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [353.25, 770.14], "label": "木更津", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [382.00, 811.33], "label": "市原", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	{ coords: [353.25, 811.39], "label": "大多喜", "info": "", group: 'L', mk: 'L' , jpname: ""},
+	//埼玉
+	{ coords: [555.00, 476.35], "label": "長瀞", "info": "", group: 'M', mk: 'M' , jpname: ""},
+	{ coords: [555.06, 490.04], "label": "寄居", "info": "", group: 'M', mk: 'M' , jpname: ""},
+	{ coords: [540.63, 476.29], "label": "秩父", "info": "", group: 'M', mk: 'M' , jpname: ""},
+	{ coords: [540.56, 548.79], "label": "日高", "info": "", group: 'M', mk: 'M' , jpname: ""},
+	{ coords: [526.06, 548.91], "label": "飯能", "info": "", group: 'M', mk: 'M' , jpname: ""},
+	{ coords: [497.31, 576.54], "label": "所沢", "info": "", group: 'M', mk: 'M' , jpname: "所澤"},
+	{ coords: [511.81, 576.35], "label": "入間", "info": "", group: 'M', mk: 'M' , jpname: ""},
+	{ coords: [526.06, 576.66], "label": "狭山", "info": "", group: 'M', mk: 'M' , jpname: "狹山"},
+	{ coords: [555.06, 576.48], "label": "東松山", "info": "", group: 'M', mk: 'M' , jpname: ""},
+	{ coords: [540.63, 590.48], "label": "川越", "info": "", group: 'M', mk: 'M' , jpname: ""},
+	{ coords: [583.88, 562.91], "label": "本庄", "info": "", group: 'M', mk: 'M' , jpname: ""},
+	{ coords: [583.81, 576.35], "label": "深谷", "info": "", group: 'M', mk: 'M' , jpname: ""},
+	{ coords: [583.88, 593.79], "label": "熊谷", "info": "", group: 'M', mk: 'M' , jpname: ""},
+	{ coords: [569.44, 593.85], "label": "行田", "info": "", group: 'M', mk: 'M' , jpname: ""},
+	{ coords: [569.44, 645.60], "label": "加須", "info": "", group: 'M', mk: 'M' , jpname: ""},
+	{ coords: [555.00, 628.41], "label": "桶川", "info": "", group: 'M', mk: 'M' , jpname: ""},
+	{ coords: [554.94, 645.60], "label": "上尾", "info": "", group: 'M', mk: 'M' , jpname: ""},
+	{ coords: [540.63, 645.60], "label": "さいたま", "info": "", group: 'M', mk: 'M' , jpname: "埼玉"},
+	{ coords: [526.13, 645.66], "label": "浦和", "info": "", group: 'M', mk: 'M' , jpname: ""},
+	{ coords: [511.81, 645.66], "label": "川口", "info": "", group: 'M', mk: 'M' , jpname: ""},
+	{ coords: [540.63, 673.29], "label": "久喜", "info": "", group: 'M', mk: 'M' , jpname: ""},
+	//東京都
+	{ coords: [511.75, 493.60], "label": "奥多摩", "info": "", group: 'N', mk: 'N' , jpname: "奧多摩"},
+	{ coords: [511.81, 507.35], "label": "青梅", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [497.25, 507.35], "label": "あきる野", "info": "", group: 'N', mk: 'N' , jpname: "秋留野"},
+	{ coords: [439.56, 521.23], "label": "八王子", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [439.63, 535.04], "label": "日野", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [454.00, 535.29], "label": "立川", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [468.44, 562.85], "label": "東村山", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [454.00, 562.79], "label": "国分寺", "info": "", group: 'N', mk: 'N' , jpname: "國分寺"},
+	{ coords: [482.75, 604.23], "label": "上井草", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [454.00, 590.35], "label": "吉祥寺", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [454.00, 604.35], "label": "荻窪", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [497.25, 645.73], "label": "池袋", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [482.75, 645.85], "label": "高田馬場", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [468.50, 645.79], "label": "大久保", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [454.00, 645.66], "label": "新宿", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [381.88, 611.04], "label": "町田", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [367.56, 645.60], "label": "恵比寿", "info": "", group: 'N', mk: 'N' , jpname: "惠比壽"},
+	{ coords: [381.94, 645.60], "label": "渋谷", "info": "", group: 'N', mk: 'N' , jpname: "澀谷"},
+	{ coords: [381.88, 659.41], "label": "六本木", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [381.81, 673.29], "label": "品川", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [367.56, 673.29], "label": "目黒", "info": "", group: 'N', mk: 'N' , jpname: "目黑"},
+	{ coords: [381.94, 701.04], "label": "新橋", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [381.88, 714.85], "label": "汐留", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [381.88, 728.73], "label": "お台場", "info": "", group: 'N', mk: 'N' , jpname: "台場"},
+	{ coords: [396.38, 700.98], "label": "銀座", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [410.69, 701.00], "label": "東京", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [410.69, 673.48], "label": "赤坂", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [410.69, 659.54], "label": "表参道", "info": "", group: 'N', mk: 'N' , jpname: "表參道"},
+	{ coords: [410.81, 645.73], "label": "原宿", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [425.19, 700.98], "label": "日本橋", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [439.63, 700.91], "label": "神田", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [454.00, 659.48], "label": "千駄ヶ谷", "info": "", group: 'N', mk: 'N' , jpname: "千駄谷"},
+	{ coords: [454.00, 673.38], "label": "四谷", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [454.00, 687.16], "label": "後楽園", "info": "", group: 'N', mk: 'N' , jpname: "後樂園"},
+	{ coords: [453.94, 700.91], "label": "秋葉原", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [454.00, 714.91], "label": "両国", "info": "", group: 'N', mk: 'N' , jpname: "兩國"},
+	{ coords: [454.00, 728.66], "label": "深川", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [454.06, 742.48], "label": "亀戸", "info": "", group: 'N', mk: 'N' , jpname: "龜戶"},
+	{ coords: [482.81, 701.10], "label": "上野", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [482.81, 714.73], "label": "浅草", "info": "", group: 'N', mk: 'N' , jpname: "淺草"},
+	{ coords: [482.75, 728.63], "label": "押上", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [497.50, 714.79], "label": "北千住", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [259.38, 663.08], "label": "伊豆大島", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [169.13, 704.51], "label": "八丈島", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	{ coords: [79.00, 784.14], "label": "小笠原", "info": "", group: 'N', mk: 'N' , jpname: ""},
+	//神奈川
+	{ coords: [353.06, 659.39], "label": "川崎", "info": "", group: 'O', mk: 'O' , jpname: ""},
+	{ coords: [338.50, 659.51], "label": "横浜", "info": "", group: 'O', mk: 'O' , jpname: "橫濱"},
+	{ coords: [338.69, 673.51], "label": "みらい", "info": "", group: 'O', mk: 'O' , jpname: "未來"},
+	{ coords: [324.38, 659.64], "label": "中華街", "info": "", group: 'O', mk: 'O' , jpname: ""},
+	{ coords: [309.88, 645.76], "label": "横須賀", "info": "", group: 'O', mk: 'O' , jpname: "橫須賀"},
+	{ coords: [309.81, 628.45], "label": "鎌倉", "info": "", group: 'O', mk: 'O' , jpname: ""},
+	{ coords: [324.38, 597.33], "label": "茅ヶ崎", "info": "", group: 'O', mk: 'O' , jpname: "茅崎"},
+	{ coords: [324.13, 579.89], "label": "平塚", "info": "", group: 'O', mk: 'O' , jpname: ""},
+	{ coords: [295.31, 552.26], "label": "湯河原", "info": "", group: 'O', mk: 'O' , jpname: ""},
+	{ coords: [309.63, 552.33], "label": "真鶴", "info": "", group: 'O', mk: 'O' , jpname: ""},
+	{ coords: [324.25, 552.64], "label": "小田原", "info": "", group: 'O', mk: 'O' , jpname: ""},
+	{ coords: [338.38, 552.39], "label": "箱根", "info": "", group: 'O', mk: 'O' , jpname: ""},
+	{ coords: [353.06, 538.70], "label": "山北", "info": "", group: 'O', mk: 'O' , jpname: ""},
+	{ coords: [367.38, 580.14], "label": "秦野", "info": "", group: 'O', mk: 'O' , jpname: ""},
+	{ coords: [367.50, 597.26], "label": "厚木", "info": "", group: 'O', mk: 'O' , jpname: ""},
+	{ coords: [381.94, 597.51], "label": "海老名", "info": "", group: 'O', mk: 'O' , jpname: ""},
+	{ coords: [381.81, 583.83], "label": "相模原", "info": "", group: 'O', mk: 'O' , jpname: ""},
+	//長野
+	{ coords: [388.94, 303.73], "label": "飯田", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [417.94, 324.41], "label": "駒ヶ根", "info": "", group: 'P', mk: 'P' , jpname: "駒根"},
+	{ coords: [435.63, 324.29], "label": "伊那", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [435.81, 348.66], "label": "高遠", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [468.50, 303.54], "label": "木曽", "info": "", group: 'P', mk: 'P' , jpname: "木曾"},
+	{ coords: [493.56, 324.23], "label": "奈良井", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [591.06, 410.79], "label": "蓼科", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [591.00, 396.85], "label": "白樺湖", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [590.94, 383.16], "label": "茅野", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [591.06, 369.10], "label": "諏訪", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [605.50, 369.16], "label": "岡谷", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [619.75, 369.23], "label": "塩尻", "info": "", group: 'P', mk: 'P' , jpname: "鹽尻"},
+	{ coords: [634.38, 383.10], "label": "松本", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [648.63, 396.73], "label": "千曲", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [663.00, 396.98], "label": "長野", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [648.56, 369.16], "label": "安曇野", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [692.00, 369.23], "label": "白馬", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [691.75, 383.10], "label": "大町", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [706.31, 410.66], "label": "野沢温泉", "info": "", group: 'P', mk: 'P' , jpname: "野澤溫泉"},
+	{ coords: [691.88, 410.66], "label": "飯山", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [677.38, 410.79], "label": "小布施", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [663.19, 410.85], "label": "須坂", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [634.13, 410.73], "label": "上田", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [619.81, 396.98], "label": "別所", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [634.13, 424.73], "label": "小諸", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	{ coords: [633.94, 438.29], "label": "軽井沢", "info": "", group: 'P', mk: 'P' , jpname: "輕井澤"},
+	{ coords: [605.56, 438.41], "label": "佐久", "info": "", group: 'P', mk: 'P' , jpname: ""},
+	//富山
+	{ coords: [691.88, 327.79], "label": "宇奈月", "info": "", group: 'Q', mk: 'Q' , jpname: ""},
+	{ coords: [706.50, 327.73], "label": "黒部", "info": "", group: 'Q', mk: 'Q' , jpname: "黑部"},
+	{ coords: [706.38, 313.98], "label": "魚津", "info": "", group: 'Q', mk: 'Q' , jpname: ""},
+	{ coords: [691.88, 300.23], "label": "滑川", "info": "", group: 'Q', mk: 'Q' , jpname: ""},
+	{ coords: [691.75, 286.29], "label": "岩瀬浜", "info": "", group: 'Q', mk: 'Q' , jpname: "岩瀨濱"},
+	{ coords: [677.63, 286.23], "label": "富山", "info": "", group: 'Q', mk: 'Q' , jpname: ""},
+	{ coords: [677.63, 272.60], "label": "射水", "info": "", group: 'Q', mk: 'Q' , jpname: ""},
+	{ coords: [691.88, 258.79], "label": "氷見", "info": "", group: 'Q', mk: 'Q' , jpname: "冰見"},
+	{ coords: [677.63, 258.79], "label": "高岡", "info": "", group: 'Q', mk: 'Q' , jpname: ""},
+	{ coords: [663.13, 244.85], "label": "砺波", "info": "", group: 'Q', mk: 'Q' , jpname: "礪波"},
+	{ coords: [648.63, 231.04], "label": "小矢部", "info": "", group: 'Q', mk: 'Q' , jpname: ""},
+	{ coords: [619.81, 258.79], "label": "城端", "info": "", group: 'Q', mk: 'Q' , jpname: ""},
+	{ coords: [634.13, 286.29], "label": "八尾", "info": "", group: 'Q', mk: 'Q' , jpname: ""},
+	//山梨
+	{ coords: [497.25, 396.98], "label": "小淵沢", "info": "", group: 'R', mk: 'R' , jpname: "小淵澤"},
+	{ coords: [497.19, 424.63], "label": "清里", "info": "", group: 'R', mk: 'R' , jpname: ""},
+	{ coords: [468.44, 424.66], "label": "北杜", "info": "", group: 'R', mk: 'R' , jpname: ""},
+	{ coords: [454.06, 424.54], "label": "韮崎", "info": "", group: 'R', mk: 'R' , jpname: ""},
+	{ coords: [454.06, 438.35], "label": "甲府", "info": "", group: 'R', mk: 'R' , jpname: ""},
+	{ coords: [425.25, 424.54], "label": "南アルプス", "info": "", group: 'R', mk: 'R' , jpname: "南阿爾卑斯"},
+	{ coords: [396.44, 424.60], "label": "身延", "info": "", group: 'R', mk: 'R' , jpname: ""},
+	{ coords: [454.00, 452.10], "label": "石和", "info": "", group: 'R', mk: 'R' , jpname: ""},
+	{ coords: [454.00, 465.98], "label": "勝沼", "info": "", group: 'R', mk: 'R' , jpname: ""},
+	{ coords: [439.69, 466.04], "label": "大月", "info": "", group: 'R', mk: 'R' , jpname: ""},
+	{ coords: [439.56, 493.66], "label": "上野原", "info": "", group: 'R', mk: 'R' , jpname: ""},
+	{ coords: [410.69, 479.85], "label": "河口湖", "info": "", group: 'R', mk: 'R' , jpname: ""},
+	{ coords: [410.69, 507.41], "label": "忍野村", "info": "", group: 'R', mk: 'R' , jpname: ""},
+	{ coords: [396.38, 493.60], "label": "富士吉田", "info": "", group: 'R', mk: 'R' , jpname: ""},
+	{ coords: [396.50, 507.35], "label": "山中湖", "info": "", group: 'R', mk: 'R' , jpname: ""},
+	//靜岡
+	{ coords: [353.19, 524.89], "label": "御殿場", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [309.94, 507.45], "label": "裾野", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [309.88, 490.26], "label": "富士宮", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [295.50, 490.26], "label": "富士", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [295.38, 507.58], "label": "沼津", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [295.31, 521.45], "label": "三島", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [295.31, 538.70], "label": "熱海", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [281.00, 538.64], "label": "伊東", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [266.56, 521.39], "label": "修善寺", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [234.19, 538.64], "label": "伊豆高原", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [234.13, 524.83], "label": "稲取", "info": "", group: 'S', mk: 'S' , jpname: "稻取"},
+	{ coords: [234.06, 511.08], "label": "河津", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [234.13, 497.14], "label": "松崎", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [219.69, 510.95], "label": "下田", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [281.06, 476.45], "label": "由比", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [281.00, 462.51], "label": "清水", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [281.00, 448.76], "label": "静岡", "info": "", group: 'S', mk: 'S' , jpname: "靜岡"},
+	{ coords: [281.06, 434.95], "label": "丸子", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [266.56, 448.95], "label": "安倍川", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [252.19, 435.08], "label": "焼津", "info": "", group: 'S', mk: 'S' , jpname: "燒津"},
+	{ coords: [230.56, 435.01], "label": "藤枝", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [259.50, 407.39], "label": "川根", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [230.56, 407.33], "label": "島田", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [216.13, 365.83], "label": "掛川", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [216.19, 351.89], "label": "磐田", "info": "", group: 'S', mk: 'S' , jpname: ""},
+	{ coords: [216.13, 324.33], "label": "浜松", "info": "", group: 'S', mk: 'S' , jpname: "濱松"},
+	//石川
+	{ coords: [749.81, 203.39], "label": "珠洲", "info": "", group: 'T', mk: 'T' , jpname: ""},
+	{ coords: [735.44, 189.58], "label": "輪島", "info": "", group: 'T', mk: 'T' , jpname: ""},
+	{ coords: [692.06, 203.51], "label": "和倉温泉", "info": "", group: 'T', mk: 'T' , jpname: "和倉溫泉"},
+	{ coords: [677.69, 203.51], "label": "七尾", "info": "", group: 'T', mk: 'T' , jpname: ""},
+	{ coords: [663.31, 189.70], "label": "羽咋", "info": "", group: 'T', mk: 'T' , jpname: ""},
+	{ coords: [648.81, 189.76], "label": "かほく", "info": "", group: 'T', mk: 'T' , jpname: "加賀"},
+	{ coords: [619.94, 231.14], "label": "茶屋街", "info": "", group: 'T', mk: 'T' , jpname: ""},
+	{ coords: [620.06, 217.33], "label": "香林坊", "info": "", group: 'T', mk: 'T' , jpname: ""},
+	{ coords: [619.94, 203.58], "label": "金沢", "info": "", group: 'T', mk: 'T' , jpname: "金澤"},
+	{ coords: [591.19, 176.01], "label": "小松", "info": "", group: 'T', mk: 'T' , jpname: ""},
+	{ coords: [576.75, 162.01], "label": "加賀", "info": "", group: 'T', mk: 'T' , jpname: ""},
+	//福井
+	{ coords: [475.75, 78.95], "label": "小浜", "info": "", group: 'U', mk: 'U' , jpname: "小濱"},
+	{ coords: [475.69, 134.33], "label": "美浜", "info": "", group: 'U', mk: 'U' , jpname: "美濱"},
+	{ coords: [475.81, 148.26], "label": "敦賀", "info": "", group: 'U', mk: 'U' , jpname: ""},
+	{ coords: [519.06, 148.08], "label": "越前", "info": "", group: 'U', mk: 'U' , jpname: ""},
+	{ coords: [533.38, 148.14], "label": "鯖江", "info": "", group: 'U', mk: 'U' , jpname: ""},
+	{ coords: [533.44, 189.89], "label": "越前大野", "info": "", group: 'U', mk: 'U' , jpname: ""},
+	{ coords: [533.38, 203.58], "label": "九頭竜", "info": "", group: 'U', mk: 'U' , jpname: "九頭龍"},
+	{ coords: [547.75, 189.70], "label": "勝山", "info": "", group: 'U', mk: 'U' , jpname: ""},
+	{ coords: [547.88, 175.83], "label": "永平寺", "info": "", group: 'U', mk: 'U' , jpname: ""},
+	{ coords: [547.88, 148.08], "label": "福井", "info": "", group: 'U', mk: 'U' , jpname: ""},
+	{ coords: [562.31, 148.20], "label": "坂井", "info": "", group: 'U', mk: 'U' , jpname: ""},
+	{ coords: [576.69, 148.20], "label": "あわら", "info": "", group: 'U', mk: 'U' , jpname: "芦原"},
+	{ coords: [576.69, 134.39], "label": "三国", "info": "", group: 'U', mk: 'U' , jpname: "三國"},
+	{ coords: [576.69, 120.51], "label": "東尋坊", "info": "", group: 'U', mk: 'U' , jpname: ""},
+	//岐阜
+	{ coords: [591.19, 286.39], "label": "白川郷", "info": "", group: 'V', mk: 'V' , jpname: "白川鄉"},
+	{ coords: [562.31, 286.45], "label": "飛騨", "info": "", group: 'V', mk: 'V' , jpname: "飛驒"},
+	{ coords: [547.81, 286.45], "label": "高山", "info": "", group: 'V', mk: 'V' , jpname: ""},
+	{ coords: [490.19, 286.45], "label": "下呂", "info": "", group: 'V', mk: 'V' , jpname: ""},
+	{ coords: [443.31, 220.70], "label": "郡上", "info": "", group: 'V', mk: 'V' , jpname: ""},
+	{ coords: [414.38, 165.39], "label": "本巣", "info": "", group: 'V', mk: 'V' , jpname: "本巢"},
+	{ coords: [342.25, 123.95], "label": "関ヶ原", "info": "", group: 'V', mk: 'V' , jpname: "關原"},
+	{ coords: [342.25, 137.83], "label": "垂井", "info": "", group: 'V', mk: 'V' , jpname: ""},
+	{ coords: [342.25, 151.76], "label": "大垣", "info": "", group: 'V', mk: 'V' , jpname: ""},
+	{ coords: [327.94, 151.70], "label": "岐阜羽島", "info": "", group: 'V', mk: 'V' , jpname: ""},
+	{ coords: [342.25, 165.45], "label": "瑞穂", "info": "", group: 'V', mk: 'V' , jpname: "瑞穗"},
+	{ coords: [342.25, 179.26], "label": "岐阜", "info": "", group: 'V', mk: 'V' , jpname: ""},
+	{ coords: [342.25, 193.08], "label": "各務原", "info": "", group: 'V', mk: 'V' , jpname: ""},
+	{ coords: [356.81, 193.01], "label": "関", "info": "", group: 'V', mk: 'V' , jpname: "關"},
+	{ coords: [371.19, 193.14], "label": "美濃", "info": "", group: 'V', mk: 'V' , jpname: ""},
+	{ coords: [356.75, 220.83], "label": "美濃加茂", "info": "", group: 'V', mk: 'V' , jpname: ""},
+	{ coords: [356.81, 234.51], "label": "可児", "info": "", group: 'V', mk: 'V' , jpname: "可兒"},
+	{ coords: [342.31, 220.83], "label": "多治見", "info": "", group: 'V', mk: 'V' , jpname: ""},
+	{ coords: [342.31, 234.64], "label": "土岐", "info": "", group: 'V', mk: 'V' , jpname: ""},
+	{ coords: [313.44, 262.01], "label": "明智", "info": "", group: 'V', mk: 'V' , jpname: ""},
+	{ coords: [327.94, 262.20], "label": "岩村", "info": "", group: 'V', mk: 'V' , jpname: ""},
+	{ coords: [342.38, 262.20], "label": "瑞浪", "info": "", group: 'V', mk: 'V' , jpname: ""},
+	{ coords: [356.75, 262.33], "label": "恵那", "info": "", group: 'V', mk: 'V' , jpname: "惠那"},
+	{ coords: [389.13, 282.89], "label": "中津川", "info": "", group: 'V', mk: 'V' , jpname: ""},
+	//愛知
+	{ coords: [342.25, 207.01], "label": "犬山", "info": "", group: 'W', mk: 'W' , jpname: ""},
+	{ coords: [309.88, 220.70], "label": "瀬戸", "info": "", group: 'W', mk: 'W' , jpname: "瀨戶"},
+	{ coords: [295.38, 241.39], "label": "豊田", "info": "", group: 'W', mk: 'W' , jpname: "豐田"},
+	{ coords: [266.50, 241.51], "label": "岡崎", "info": "", group: 'W', mk: 'W' , jpname: ""},
+	{ coords: [244.94, 255.26], "label": "豊川", "info": "", group: 'W', mk: 'W' , jpname: "豐川"},
+	{ coords: [230.56, 255.39], "label": "豊橋", "info": "", group: 'W', mk: 'W' , jpname: "豐橋"},
+	{ coords: [230.56, 241.51], "label": "蒲郡", "info": "", group: 'W', mk: 'W' , jpname: ""},
+	{ coords: [201.69, 199.95], "label": "伊良湖", "info": "", group: 'W', mk: 'W' , jpname: ""},
+	{ coords: [230.56, 224.20], "label": "吉良", "info": "", group: 'W', mk: 'W' , jpname: ""},
+	{ coords: [244.94, 210.33], "label": "西尾", "info": "", group: 'W', mk: 'W' , jpname: ""},
+	{ coords: [262.94, 210.26], "label": "安城", "info": "", group: 'W', mk: 'W' , jpname: ""},
+	{ coords: [252.25, 165.39], "label": "半田", "info": "", group: 'W', mk: 'W' , jpname: ""},
+	{ coords: [266.63, 151.70], "label": "常滑", "info": "", group: 'W', mk: 'W' , jpname: ""},
+	{ coords: [295.38, 193.14], "label": "有松", "info": "", group: 'W', mk: 'W' , jpname: ""},
+	{ coords: [295.44, 179.26], "label": "熱田", "info": "", group: 'W', mk: 'W' , jpname: ""},
+	{ coords: [295.38, 165.39], "label": "栄", "info": "", group: 'W', mk: 'W' , jpname: "榮"},
+	{ coords: [295.38, 151.70], "label": "名古屋港", "info": "", group: 'W', mk: 'W' , jpname: ""},
+	{ coords: [309.88, 151.76], "label": "弥富", "info": "", group: 'W', mk: 'W' , jpname: "彌富"},
+	{ coords: [309.88, 165.39], "label": "名古屋", "info": "", group: 'W', mk: 'W' , jpname: ""},
+	],
+  D: [
+	{ coords: [1622.13, 811.38], "label": "札幌", "info": "<table class='bordered-table'><tr><td>名稱</td><td>クラーク博士<br>克拉克博士</td></tr><tr><td>地點</td><td>札幌（北海道）</td></tr><tr><td>獨占金額</td><td>2638億5000万円</td></tr><tr><td>效果</td><td>未經許可將持有資金，強制購買無主的物件。<br>（高價格物件優先購買）<br>（條件：每年3月或4月，初登場無視條件）</td></tr></table>", group: 'A', mk: 'D' , jphero: ""},
+	{ coords: [1463.63, 755.88], "label": "函館", "info": "<table class='bordered-table'><tr><td>名稱</td><td>土方歳三<br>土方歲三</td></tr><tr><td>地點</td><td>函館（北海道）</td></tr><tr><td>獨占金額</td><td>189億8000万円</td></tr><tr><td>效果</td><td>向其他人奪取物件。</td></tr></table>", group: 'A', mk: 'D' , jphero: ""},
+	{ coords: [893.81, 797.54], "label": "仙台", "info": "<table class='bordered-table'><tr><td>名稱</td><td>伊達政宗</td></tr><tr><td>地點</td><td>仙台（宮城県）</td></tr><tr><td>獨占金額</td><td>5495億3000万円</td></tr><tr><td>效果</td><td>所持的移動系卡片，升級移動系卡片。<br>（能升級成周遊卡）</td></tr><tr><td>效果</td><td>若沒有移動系卡片，則會贈送1張。</td></tr></table>", group: 'E', mk: 'D' , jphero: ""},
+	{ coords: [850.50, 714.60], "label": "米沢", "info": "<table class='bordered-table'><tr><td>名稱</td><td>上杉鷹山</td></tr><tr><td>地點</td><td>米沢（山形県）</td></tr><tr><td>獨占金額</td><td>9億円</td></tr><tr><td>效果</td><td>5個月期間其他人無法購買物件與卡片。</td></tr><tr><td>效果</td><td>5個月期間限制其他人無法使用資金相關卡片。</td></tr></table>", group: 'F', mk: 'D' , jphero: ""},
+	{ coords: [807.25, 714.98], "label": "猪苗代", "info": "<table class='bordered-table'><tr><td>名稱</td><td>野口英世</td></tr><tr><td>地點</td><td>猪苗代（福島県）</td></tr><tr><td>獨占金額</td><td>24億1000万円</td></tr><tr><td>效果</td><td>消滅惡魔系卡片。<br>（「小惡魔卡」、「惡魔卡」、「大惡魔卡」）</td></tr></table>", group: 'G', mk: 'D' , jphero: ""},
+	{ coords: [749.63, 410.79], "label": "上越", "info": "<table class='bordered-table'><tr><td>名稱</td><td>上杉謙信</td></tr><tr><td>地點</td><td>上越（新潟県）</td></tr><tr><td>獨占金額</td><td>5436億3000万円</td></tr><tr><td>效果</td><td>至少停止3個月窮神惡行。</td></tr><tr><td>效果</td><td>偷取其他人擁有的物件。</td></tr><tr><td>效果</td><td>一定機率將持有資金的10分之1給最後一名的社長。</td></tr></table>", group: 'H', mk: 'D' , jphero: ""},
+	{ coords: [807.13, 549.20], "label": "新発田", "info": "<table class='bordered-table'><tr><td>名稱</td><td>堀部安兵衛</td></tr><tr><td>地點</td><td>新発田（新潟県）</td></tr><tr><td>獨占金額</td><td>10億6000万円</td></tr><tr><td>效果</td><td>之前失去的已獨占的物件，能重新購買物件。<br>（不包含失去後，已被其他人獨占物件）</td></tr></table>", group: 'H', mk: 'D' , jphero: ""},
+	{ coords: [583.69, 852.81], "label": "水戸", "info": "<table class='bordered-table'><tr><td>名稱</td><td>水戸黄門<br>水戶黃門</td></tr><tr><td>地點</td><td>水戸（茨城県）</td></tr><tr><td>獨占金額</td><td>235億5000万円</td></tr><tr><td>效果</td><td>扒手銀次出現時，有高機率擊退。</td></tr><tr><td>效果</td><td>高機率，無效化「德古拉寶寶卡」。</td></tr><tr><td>效果</td><td>高機率，無效化「持有資金歸零卡」。<br>（條件：50年以後）</td></tr></table>", group: 'I', mk: 'D' , jphero: ""},
+	{ coords: [746.06, 728.73], "label": "那須", "info": "<table class='bordered-table'><tr><td>名稱</td><td>那須与一<br>那須與一</td></tr><tr><td>地點</td><td>那須（栃木県）</td></tr><tr><td>獨占金額</td><td>26億2000万円</td></tr><tr><td>效果</td><td>投擲骰子，按照骰子數字獲得無主的物件。</td></tr></table>", group: 'J', mk: 'D' , jphero: ""},
+	{ coords: [615.56, 594.38], "label": "卡片車站", "info": "<table class='bordered-table'><tr><td>名稱</td><td>国定忠治<br>國定忠治</td></tr><tr><td>地點</td><td>卡片車站（群馬県）伊勢崎上方1格</td></tr><tr><td>獨占金額</td><td>無，特殊條件</td></tr><tr><td>效果</td><td>低機率，獲得100億，以後這些的夥伴(5位)，全部解任。<br>（條件：夥伴擁有平賀源內、源賴朝、水戶黃門、那須與一、鼠小僧）</td></tr></table>", group: 'K', mk: 'D' , jphero: ""},
+	{ coords: [497.44, 852.95], "label": "佐原", "info": "<table class='bordered-table'><tr><td>名稱</td><td>伊能忠敬</td></tr><tr><td>地點</td><td>佐原（千葉県）</td></tr><tr><td>獨占金額</td><td>12億3000万円</td></tr><tr><td>效果</td><td>選擇4個中的1個物件車站獨占。<br>（條件：50年1月以後）</td></tr></table>", group: 'L', mk: 'D' , jphero: ""},
+	{ coords: [583.81, 576.35], "label": "深谷", "info": "<table class='bordered-table'><tr><td>名稱</td><td>渋沢栄一<br>涉澤榮一</td></tr><tr><td>地點</td><td>深谷（埼玉県）</td></tr><tr><td>獨占金額</td><td>233億2000万円</td></tr><tr><td>效果</td><td>隨機獲得1個價格10億以上的物件。<br>（價格上限隨著年數經過，能獲得的更高價格的物件）</td></tr></table>", group: 'M', mk: 'D' , jphero: ""},
+	{ coords: [454.00, 728.66], "label": "深川", "info": "<table class='bordered-table'><tr><td>名稱</td><td>平賀源内<br>平賀源內</td></tr><tr><td>地點</td><td>深川（東京都）</td></tr><tr><td>獨占金額</td><td>8億4000万円</td></tr><tr><td>效果</td><td>有機率，使用6種發明品的其中1種。</td></tr><tr><td>效果</td><td>絆腳機：讓其他人休假3個月。</td></tr><tr><td>效果</td><td>閃近機：移動到目的地的7-13格內。</td></tr><tr><td>效果</td><td>物件購買機：半價購買所持金額以下的物件。</td></tr><tr><td>效果</td><td>卡片製造機：3張卡片選擇獲得其中1種。<br>（共有5種）</td></tr><tr><td>效果</td><td>獨占購買機：半價獨占購買所持金額以下的物件車站。<br>（條件：16年4月~31年3月）</td></tr><tr><td>效果</td><td>範圍購買機：購買一定範圍內的所有無主的物件車站。<br>（條件：32年4月以後）</td></tr></table>", group: 'A', mk: 'D' , jphero: ""},
+	{ coords: [439.63, 700.91], "label": "神田", "info": "<table class='bordered-table'><tr><td>名稱</td><td>坂本竜馬<br>坂本龍馬</td></tr><tr><td>地點</td><td>神田（東京都）</td></tr><tr><td>獨占金額</td><td>100億4000万円</td></tr><tr><td>效果</td><td>搶奪其他人的1-3物件。<br>（初登場，若沒有搶奪的物件，獲得「新幹線周遊卡」）</td></tr></table>", group: 'N', mk: 'D' , jphero: ""},
+	{ coords: [410.69, 673.48], "label": "赤坂", "info": "<table class='bordered-table'><tr><td>名稱</td><td>勝海舟</td></tr><tr><td>地點</td><td>赤坂（東京都）</td></tr><tr><td>獨占金額</td><td>165億円</td></tr><tr><td>效果</td><td>隨機獲得1個價格10億以上的物件車站的所有物件。<br>（價格上限隨著年數經過，能獲得的更高價格的物件）</td></tr></table>", group: 'N', mk: 'D' , jphero: ""},
+	{ coords: [482.81, 714.73], "label": "浅草", "info": "<table class='bordered-table'><tr><td>名稱</td><td>ネズミ小僧<br>鼠小僧</td></tr><tr><td>地點</td><td>浅草（東京都）</td></tr><tr><td>獨占金額</td><td>409億6000万円</td></tr><tr><td>效果</td><td>低機率，向其他人奪取持有資金。</td></tr><tr><td>效果</td><td>若持有「定時炸彈卡」，可消除此卡片。<br>（消除卡片一次1張）</td></tr></table>", group: 'N', mk: 'D' , jphero: ""},
+	{ coords: [454.00, 673.38], "label": "四谷", "info": "<table class='bordered-table'><tr><td>名稱</td><td>大久保利通</td></tr><tr><td>地點</td><td>四谷（東京都）</td></tr><tr><td>獨占金額</td><td>704億2000万円</td></tr><tr><td>效果</td><td>將在目的地車站區域的其他人傳到其他區域。</td></tr><tr><td>效果</td><td>低機率，已聘任此英雄的某人低於5張卡片，所有人將所有卡片丟棄。<br>（包含自己也要丟棄所有卡片）</td></tr></table>", group: 'N', mk: 'D' , jphero: ""},
+	{ coords: [425.19, 700.98], "label": "日本橋", "info": "<table class='bordered-table'><tr><td>名稱</td><td>西郷隆盛<br>西鄉隆盛</td></tr><tr><td>地點</td><td>日本橋（東京都）</td></tr><tr><td>獨占金額</td><td>901億円</td></tr><tr><td>效果</td><td>全國募集資金，分給所有人資金，自己獲得最多。</td></tr><tr><td>效果</td><td>呼喚「西鄉咚」跟隨，每月獲得幫助，直到某個人抵達目的地車站。</td></tr></table>", group: 'N', mk: 'D' , jphero: ""},
+	{ coords: [454.00, 659.48], "label": "千駄ヶ谷", "info": "<table class='bordered-table'><tr><td>名稱</td><td>沖田総司<br>沖田總司</td></tr><tr><td>地點</td><td>千駄ヶ谷（東京都）</td></tr><tr><td>獨占金額</td><td>2317億7000万円</td></tr><tr><td>效果</td><td>搶奪其他人高價格的1個物件。<br>（價格上限隨著年數經過，能搶奪的更高價格的物件）</td></tr></table>", group: 'N', mk: 'D' , jphero: ""},
+	{ coords: [410.69, 701.00], "label": "東京", "info": "<table class='bordered-table'><tr><td>名稱</td><td>太田道灌</td></tr><tr><td>地點</td><td>東京（東京都）</td></tr><tr><td>獨占金額</td><td>1兆5012億8000万円</td></tr><tr><td>效果</td><td>在12個月的時間內，其他人無法進入山手線的區域內，<br>原本在山手線區域內的其他人，在12個月的時間內無法離開區域外。</td></tr></table>", group: 'N', mk: 'D' , jphero: ""},
+	{ coords: [324.25, 552.64], "label": "小田原", "info": "<table class='bordered-table'><tr><td>名稱</td><td>二宮金次郎</td></tr><tr><td>地點</td><td>小田原（神奈川県）</td></tr><tr><td>獨占金額</td><td>5000万円</td></tr><tr><td>效果</td><td>持有其中一個農林物件，收益率會依據骰子點數（%）來上升。<br>（例如：原收益率10%，骰子點數擲出6，改為16%）</td></tr><tr><td>效果</td><td>列出擁有的10個最賺錢的農林物件收益率（無特殊效果）。</td></tr></table>", group: 'O', mk: 'D' , jphero: ""},
+	{ coords: [309.81, 628.45], "label": "鎌倉", "info": "<table class='bordered-table'><tr><td>名稱</td><td>源頼朝<br>源賴朝</td></tr><tr><td>地點</td><td>鎌倉（神奈川県）</td></tr><tr><td>獨占金額</td><td>10億円</td></tr><tr><td>效果</td><td>關東地區的物件車站中，購買1-4個無主的物件。</td></tr></table>", group: 'O', mk: 'D' , jphero: ""},
+	{ coords: [634.38, 383.10], "label": "松本", "info": "<table class='bordered-table'><tr><td>名稱</td><td>石川数正<br>石川數正</td></tr><tr><td>地點</td><td>松本（長野県）</td></tr><tr><td>獨占金額</td><td>6億7000万円</td></tr><tr><td>效果</td><td>購買價格1000萬無主的物件。</td></tr><tr><td>效果</td><td>購買價格1億無主的物件。<br>（條件：32年4月以後）</td></tr></table>", group: 'P', mk: 'D' , jphero: ""},
+	{ coords: [677.38, 410.79], "label": "小布施", "info": "<table class='bordered-table'><tr><td>名稱</td><td>葛飾北斎<br>葛飾北齋</td></tr><tr><td>地點</td><td>小布施（長野県）</td></tr><tr><td>獨占金額</td><td>9億4000万円</td></tr><tr><td>效果</td><td>根據繪畫內容（共12種），獲得不同的臨時收入。</td></tr></table>", group: 'P', mk: 'D' , jphero: ""},
+	{ coords: [454.06, 438.35], "label": "甲府", "info": "<table class='bordered-table'><tr><td>名稱</td><td>武田信玄</td></tr><tr><td>地點</td><td>甲府（山梨県）</td></tr><tr><td>獨占金額</td><td>32億5000万円</td></tr><tr><td>效果</td><td>「風」、「林」、「火」、「山」，四種擇一能力發動。</td></tr><tr><td>效果</td><td>風：投擲骰子，用「風」吹飛，將其他人遠離車站目的地。</td></tr><tr><td>效果</td><td>林：用「林」限制，對其他人使用其中一種卡片。<br>（「封印卡」/「冬眠卡」/「牛步卡」）</td></tr><tr><td>效果</td><td>火：用「火」燃燒，減少其他人的持有資金。</td></tr><tr><td>效果</td><td>山：用「山」困住，強制其他人休息2個月。</td></tr></table>", group: 'R', mk: 'D' , jphero: ""},
+	{ coords: [219.69, 510.95], "label": "下田", "info": "<table class='bordered-table'><tr><td>名稱</td><td>ペリー<br>培里</td></tr><tr><td>地點</td><td>下田（静岡県）</td></tr><tr><td>獨占金額</td><td>15億3000万円</td></tr><tr><td>效果</td><td>將距離最近目的地車站的其他人，放置1-3大便。</td></tr></table>", group: 'S', mk: 'D' , jphero: ""},
+	{ coords: [591.19, 176.01], "label": "小松", "info": "<table class='bordered-table'><tr><td>名稱</td><td>源義経<br>源義經</td></tr><tr><td>地點</td><td>小松（石川県）</td></tr><tr><td>獨占金額</td><td>647億3000万円</td></tr><tr><td>效果</td><td>距離目的地車站20格以內，從5個物件車站中，選擇車站前往並可以購買物件。<br>（條件：距離目的地車站16格以上）</td></tr></table>", group: 'T', mk: 'D' , jphero: ""},
+	{ coords: [342.25, 137.83], "label": "垂井", "info": "<table class='bordered-table'><tr><td>名稱</td><td>竹中半兵衛</td></tr><tr><td>地點</td><td>垂井（岐阜県）</td></tr><tr><td>獨占金額</td><td>3億5000万円</td></tr><tr><td>效果</td><td>消除惡魔系卡片。<br>（除了「小惡魔卡」、「惡魔卡」、「大惡魔卡」，都可消除）</td></tr></table>", group: 'V', mk: 'D' , jphero: ""},
+	{ coords: [266.50, 241.51], "label": "岡崎", "info": "<table class='bordered-table'><tr><td>名稱</td><td>徳川家康<br>德川家康</td></tr><tr><td>地點</td><td>岡崎（愛知県）</td></tr><tr><td>獨占金額</td><td>120億円</td></tr><tr><td>效果</td><td>隨機選擇一個物件車站，可以獨占物件車站。</td></tr><tr><td>效果</td><td>德川四天王，任一人隨機登場。</td></tr><tr><td>效果</td><td>酒井忠次：移動到附近卡片賣場車站。</td></tr><tr><td>效果</td><td>本田忠勝：獨占附近的1-4個物件。</td></tr><tr><td>效果</td><td>榊原康政：選擇一個地區，飛往此區域的隨機車站。<br>（條件：32年4月以後）</td></tr><tr><td>效果</td><td>井伊直政：可以使用卡片銀行車站。<br>（條件：32年4月以後）</td></tr></table>", group: 'W', mk: 'D' , jphero: ""},
+	{ coords: [295.38, 165.39], "label": "栄", "info": "<table class='bordered-table'><tr><td>名稱</td><td>豊臣秀吉</td></tr><tr><td>地點</td><td>栄（愛知県）</td></tr><tr><td>獨占金額</td><td>203億6000万円</td></tr><tr><td>效果</td><td>能以九折、四分之一、半價購入物件。<br>（例如半價：1000億，能以500億購買）</td></tr></table>", group: 'W', mk: 'D' , jphero: ""},
+	{ coords: [309.88, 165.39], "label": "名古屋", "info": "<table class='bordered-table'><tr><td>名稱</td><td>織田信長</td></tr><tr><td>地點</td><td>名古屋（愛知県）</td></tr><tr><td>獨占金額</td><td>512億4000万円</td></tr><tr><td>效果</td><td>毀滅卡片，摧毀其他人的卡片。</td></tr><tr><td>效果</td><td>毀滅炸彈，低機率，摧毀「定時炸彈卡」。</td></tr><tr><td>效果</td><td>毀滅距離，低機率，若距離目的地車站超過40格，直接前往目的地車站。</td></tr><tr><td>效果</td><td>毀滅弱小，低機率，直接將窮神轉為窮神大魔王。</td></tr></table>", group: 'W', mk: 'D' , jphero: ""},
+	],
+};
+
+// 圖示標記車站
+var colocopyMarkers = {
+	//都道府縣廳jpcity:
+	phoenix_city: [
+	{ coords: [1622.13, 811.38], "label": "札幌-都道府縣廳", "info": "", mk: 'B' , jpcity: "北海道"},
+	{ coords: [1268.81, 756.04], "label": "青森-都道府縣廳", "info": "", mk: 'B' , jpcity: "青森県"},
+	{ coords: [1110.25, 797.41], "label": "盛岡-都道府縣廳", "info": "", mk: 'B' , jpcity: "岩手県"},
+	{ coords: [1110.13, 659.29], "label": "秋田-都道府縣廳", "info": "", mk: 'B' , jpcity: "秋田県"},
+	{ coords: [893.81, 797.54], "label": "仙台-都道府縣廳", "info": "", mk: 'B' , jpcity: "宮城県"},
+	{ coords: [893.81, 714.41], "label": "山形-都道府縣廳", "info": "", mk: 'B' , jpcity: "山形県"},
+	{ coords: [836.00, 728.35], "label": "福島-都道府縣廳", "info": "", mk: 'B' , jpcity: "福島県"},
+	{ coords: [792.75, 507.48], "label": "新潟-都道府縣廳", "info": "", mk: 'B' , jpcity: "新潟県"},
+	{ coords: [583.69, 852.81], "label": "水戸(水戶)-都道府縣廳", "info": "", mk: 'B' , jpcity: "茨城県"},
+	{ coords: [655.94, 728.66], "label": "宇都宮-都道府縣廳", "info": "", mk: 'B' , jpcity: "栃木県"},
+	{ coords: [598.13, 562.91], "label": "前橋-都道府縣廳", "info": "", mk: 'B' , jpcity: "群馬県"},
+	{ coords: [454.00, 797.39], "label": "千葉-都道府縣廳", "info": "", mk: 'B' , jpcity: "千葉県"},
+	{ coords: [526.13, 645.66], "label": "浦和-都道府縣廳", "info": "", mk: 'B' , jpcity: "埼玉県"},
+	{ coords: [454.00, 645.66], "label": "新宿-都道府縣廳", "info": "", mk: 'B' , jpcity: "東京都"},
+	{ coords: [338.50, 659.51], "label": "横浜(橫濱)-都道府縣廳", "info": "", mk: 'B' , jpcity: "神奈川県"},
+	{ coords: [663.00, 396.98], "label": "長野-都道府縣廳", "info": "", mk: 'B' , jpcity: "長野県"},
+	{ coords: [677.63, 286.23], "label": "富山-都道府縣廳", "info": "", mk: 'B' , jpcity: "富山県"},
+	{ coords: [454.06, 438.35], "label": "甲府-都道府縣廳", "info": "", mk: 'B' , jpcity: "山梨県"},
+	{ coords: [281.00, 448.76], "label": "静岡(靜岡)-都道府縣廳", "info": "", mk: 'B' , jpcity: "静岡県"},
+	{ coords: [619.94, 203.58], "label": "金沢(金澤)-都道府縣廳", "info": "", mk: 'B' , jpcity: "石川県"},
+	{ coords: [547.88, 148.08], "label": "福井-都道府縣廳", "info": "", mk: 'B' , jpcity: "福井県"},
+	{ coords: [342.25, 179.26], "label": "岐阜-都道府縣廳", "info": "", mk: 'B' , jpcity: "岐阜県"},
+	{ coords: [309.88, 165.39], "label": "名古屋-都道府縣廳", "info": "", mk: 'B' , jpcity: "愛知県"},
+	],
+	phoenix_shop0Y: [
+	{ coords: [1910.81, 853.01], "label": "宗谷-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 急行周遊カード<br>(2顆骰子；使用回數：5-7回)</td><td>8000万</td></tr><tr><td> 特急周遊カード<br>(3顆骰子；使用回數：5-7回)</td><td>3億</td></tr><tr><td> イエローカード<br>(使用時，加錢車站與扣錢車站變為卡片車站4-6個月)<br>(好運狀態中，卡片車站都變成好卡片車站)<br>(使用後，可以繼續行動)</td><td>2000万</td></tr><tr><td> ぶっとびカード<br>(隨機飛往物件車站)</td><td>4000万</td></tr><tr><td> シュレッダーカード<br>(移除原本無法丟棄的卡片)<br>(自行選擇，移除5-9張卡片)</td><td>4000万</td></tr><tr><td> オナラカード<br>(吹走除了自己之外的所有人，離目的地15格)</td><td>7000万</td></tr><tr><td> 徳政令カード<br>(使用時，持有資金為負數能歸零)<br>(使用後，可以繼續行動)</td><td>0円</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系"},
+	{ coords: [1737.69, 1046.20], "label": "女満別(女滿別)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 新幹線カード<br>(5顆骰子)</td><td>7000万</td></tr><tr><td> 特急周遊カード<br>(3顆骰子；使用回數：5-7回)</td><td>3億</td></tr><tr><td> 乗っ取りカード<br>(可以搶占其他人物件)</td><td>2億</td></tr><tr><td> 強奪飛びカード<br>(飛行到其他人的物件並搶走1件)</td><td>2億</td></tr><tr><td> スペシャルカード<br>(指定骰子1~6)</td><td>4億</td></tr><tr><td> 物件飛びカード<br>(飛往持有資金可獨占的物件車站)</td><td>4億</td></tr><tr><td> パトカード<br>(持卡時，擊退扒手銀次1次)</td><td>10億</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系"},
+	{ coords: [1622.44, 797.51], "label": "真駒内(真駒內)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 急行周遊カード<br>(2顆骰子；使用回數：5-7回)</td><td>8000万</td></tr><tr><td> 新幹線周遊カード<br>(5顆骰子；使用回數：5-7回)</td><td>5億</td></tr><tr><td> ぶっとびカード<br>(隨機飛往物件車站)</td><td>4000万</td></tr><tr><td> シュレッダーカード<br>(移除原本無法丟棄的卡片)<br>(自行選擇，移除5-9張卡片)</td><td>4000万</td></tr><tr><td> 期間延長カード<br>(將周遊系列卡重置使用次數)<br>(使用後，可以繼續行動)</td><td>1億</td></tr><tr><td> スペシャルカード<br>(指定骰子1~6)</td><td>4億</td></tr><tr><td> パトカード<br>(持卡時，擊退扒手銀次1次)</td><td>10億</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系、時效延長卡"},
+	{ coords: [1608.00, 825.14], "label": "新札幌-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 急行周遊カード<br>(2顆骰子；使用回數：5-7回)</td><td>8000万</td></tr><tr><td> 新幹線周遊カード<br>(5顆骰子；使用回數：5-7回)</td><td>5億</td></tr><tr><td> シュレッダーカード<br>(移除原本無法丟棄的卡片)<br>(自行選擇，移除5-9張卡片)</td><td>4000万</td></tr><tr><td> あっちいけカード<br>(將窮神轉嫁其他人，僅限未變身前的窮神)</td><td>1億</td></tr><tr><td> 最果てカード<br>(指定其他人放到離目的地最遠位置)</td><td>2億</td></tr><tr><td> オール６カード<br>(骰子六面全部為六；可以搭配骰子相關移動系卡片；使用後，可以繼續行動)</td><td>4億</td></tr><tr><td> 君がすべて！カード<br>(將自己持有的所有卡片變為指定的相同卡，包含此卡)<br>(能利用價格0圓「一筆勾銷」卡片來變更)</td><td>4億</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系、高級複製卡(1-49年)、攻擊卡(50年後)"},
+	{ coords: [1593.50, 839.01], "label": "千歳(千歲)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 特急周遊カード<br>(3顆骰子；使用回數：5-7回)</td><td>3億</td></tr><tr><td> はやぶさカード<br>(7顆骰子)</td><td>3億2000万</td></tr><tr><td> テレポートカード<br>(指定飛到其他人1-3格)</td><td>5億</td></tr><tr><td> 物件飛びカード<br>(飛往持有資金可獨占的物件車站)</td><td>4億</td></tr><tr><td> スペシャルカード<br>(指定骰子1~6)</td><td>4億</td></tr><tr><td> パトカード<br>(持卡時，擊退扒手銀次1次)</td><td>10億</td></tr><tr><td> 徳政令カード<br>(使用時，持有資金為負數能歸零)<br>(使用後，可以繼續行動)</td><td>0円</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系、傳送卡"},
+	{ coords: [1463.69, 742.33], "label": "五稜郭-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 特急カード<br>(3顆骰子)</td><td>4000万</td></tr><tr><td> 新幹線カード<br>(5顆骰子)</td><td>7000万</td></tr><tr><td> のぞみカード<br>(6顆骰子)</td><td>2億</td></tr><tr><td> はやぶさカード<br>(7顆骰子)</td><td>3億2000万</td></tr><tr><td> リニアカード<br>(10顆骰子)</td><td>4億</td></tr><tr><td> 徳政令カード<br>(使用時，持有資金為負數能歸零)<br>(使用後，可以繼續行動)</td><td>0円</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系"},
+	{ coords: [1370.00, 797.58], "label": "恐山-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 特急周遊カード<br>(3顆骰子；使用回數：5-7回)</td><td>3億</td></tr><tr><td> ぶっとびカード<br>(隨機飛往物件車站)</td><td>4000万</td></tr><tr><td> 北へ！カード<br>(當前位置，向北方移動)</td><td>6000万</td></tr><tr><td> 西へ！カード<br>(當前位置，向西方移動)</td><td>6000万</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行)<br>(卡片銀行最多儲存32張卡片)<br>(使用後，可以繼續行動)</td><td>1億</td></tr><tr><td> ☆飛びカード<br>(卡片賣場)</td><td>2億</td></tr><tr><td> 物件飛びカード<br>(飛往持有資金可獨占的物件車站)</td><td>4億</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系、☆飛行卡"},
+	{ coords: [821.81, 728.45], "label": "二本松-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 急行周遊カード<br>(2顆骰子；使用回數：5-7回)</td><td>8000万</td></tr><tr><td> 特急周遊カード<br>(3顆骰子；使用回數：5-7回)</td><td>3億</td></tr><tr><td> イエローカード<br>(使用時，加錢車站與扣錢車站變為卡片車站4-6個月)<br>(好運狀態中，卡片車站都變成好卡片車站)<br>(使用後，可以繼續行動)</td><td>2000万</td></tr><tr><td> ぶっとびカード<br>(隨機飛往物件車站)</td><td>4000万</td></tr><tr><td> シュレッダーカード<br>(移除原本無法丟棄的卡片)<br>(自行選擇，移除5-9張卡片)</td><td>4000万</td></tr><tr><td> オナラカード<br>(吹走除了自己之外的所有人，離目的地15格)</td><td>7000万</td></tr><tr><td> 徳政令カード<br>(使用時，持有資金為負數能歸零)<br>(使用後，可以繼續行動)</td><td>0円</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系"},
+	{ coords: [749.75, 839.08], "label": "袋田-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 特急周遊カード<br>(3顆骰子；使用回數：5-7回)</td><td>3億</td></tr><tr><td> 刀狩りカード<br>(偷1張卡片)<br>(低機率偷取2張卡片)</td><td>2億</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系、搶奪卡"},
+	{ coords: [612.81, 659.64], "label": "葛生-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 新幹線カード<br>(5顆骰子)</td><td>7000万</td></tr><tr><td> 特急周遊カード<br>(3顆骰子；使用回數：5-7回)</td><td>3億</td></tr><tr><td> 乗っ取りカード<br>(可以搶占其他人物件)</td><td>2億</td></tr><tr><td> 強奪飛びカード<br>(飛行到其他人的物件並搶走1件)</td><td>2億</td></tr><tr><td> スペシャルカード<br>(指定骰子1~6)</td><td>4億</td></tr><tr><td> 物件飛びカード<br>(飛往持有資金可獨占的物件車站)</td><td>4億</td></tr><tr><td> パトカード<br>(持卡時，擊退扒手銀次1次)</td><td>10億</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系"},
+	{ coords: [338.63, 825.20], "label": "大原-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 特急周遊カード<br>(3顆骰子；使用回數：5-7回)</td><td>3億</td></tr><tr><td> ぶっとびカード<br>(隨機飛往物件車站)</td><td>4000万</td></tr><tr><td> 北へ！カード<br>(當前位置，向北方移動)</td><td>6000万</td></tr><tr><td> 西へ！カード<br>(當前位置，向西方移動)</td><td>6000万</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行)<br>(卡片銀行最多儲存32張卡片)<br>(使用後，可以繼續行動)</td><td>1億</td></tr><tr><td> ☆飛びカード<br>(卡片賣場)</td><td>2億</td></tr><tr><td> 物件飛びカード<br>(飛往持有資金可獨占的物件車站)</td><td>4億</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系、☆飛行卡"},
+	{ coords: [353.19, 742.58], "label": "海ほたる(海螢)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 特急カード<br>(3顆骰子)</td><td>4000万</td></tr><tr><td> 新幹線カード<br>(5顆骰子)</td><td>7000万</td></tr><tr><td> のぞみカード<br>(6顆骰子)</td><td>2億</td></tr><tr><td> はやぶさカード<br>(7顆骰子)</td><td>3億2000万</td></tr><tr><td> リニアカード<br>(10顆骰子)</td><td>4億</td></tr><tr><td> 徳政令カード<br>(使用時，持有資金為負數能歸零)<br>(使用後，可以繼續行動)</td><td>0円</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系"},
+	{ coords: [381.94, 687.20], "label": "高輪ゲートウェイ(高輪Gateway)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>第1年4月~30年2月</td><td>販賣價格</td></tr><tr><td> はやぶさカード(7顆骰子)</td><td>3億2000万</td></tr><tr><td> 物件飛びカード(飛往物件)</td><td>4億</td></tr><tr><td> 徳政令カード(一筆勾銷卡)</td><td>0円</td></tr><tr><td>第10年3月~20年2月，增加</td><td>販賣價格</td></tr><tr><td> のぞみカード(6顆骰子)</td><td>2億</td></tr><tr><td> リニアカード(10顆骰子)</td><td>4億</td></tr><tr><td>第20年3月~30年2月，周遊</td><td>販賣價格</td></tr><tr><td>のぞみ周遊(6顆骰子；5-7回)</td><td>20億</td></tr><tr><td> はやぶさ周遊(7顆骰子；7-11回)</td><td>24億</td></tr><tr><td> カードバンクカード(卡片銀行卡)</td><td>2億</td></tr><tr><td>第30年3月~49年3月，增加、周遊</td><td>販賣價格</td></tr><tr><td> リニア周遊(10顆骰子；9-15回)</td><td>40億</td></tr><tr><td> 物件飛び周遊(飛往物件；5-9回)</td><td>20億</td></tr><tr><td> パトカード(擊退扒手銀次1次)</td><td>20億</td></tr><tr><td> スペシャルズ(超級特殊卡；5-6回)</td><td>32億</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系、高級移動卡"},
+	{ coords: [482.88, 618.14], "label": "鷺宮-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 急行周遊カード<br>(2顆骰子；使用回數：5-7回)</td><td>8000万</td></tr><tr><td> 新幹線周遊カード<br>(5顆骰子；使用回數：5-7回)</td><td>5億</td></tr><tr><td> ぶっとびカード<br>(隨機飛往物件車站)</td><td>4000万</td></tr><tr><td> シュレッダーカード<br>(移除原本無法丟棄的卡片)<br>(自行選擇，移除5-9張卡片)</td><td>4000万</td></tr><tr><td> 期間延長カード<br>(將周遊系列卡重置使用次數)<br>(使用後，可以繼續行動)</td><td>1億</td></tr><tr><td> スペシャルカード<br>(指定骰子1~6)</td><td>4億</td></tr><tr><td> パトカード<br>(持卡時，擊退扒手銀次1次)</td><td>10億</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系、時效延長卡"},
+	{ coords: [454.13, 618.08], "label": "中野-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 新幹線カード<br>(5顆骰子)</td><td>7000万</td></tr><tr><td> 特急周遊カード<br>(3顆骰子；使用回數：5-7回)</td><td>3億</td></tr><tr><td> 乗っ取りカード<br>(可以搶占其他人物件)</td><td>2億</td></tr><tr><td> 強奪飛びカード<br>(飛行到其他人的物件並搶走1件)</td><td>2億</td></tr><tr><td> スペシャルカード<br>(指定骰子1~6)</td><td>4億</td></tr><tr><td> 物件飛びカード<br>(飛往持有資金可獨占的物件車站)</td><td>4億</td></tr><tr><td> パトカード<br>(持卡時，擊退扒手銀次1次)</td><td>10億</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系"},
+	{ coords: [497.38, 548.89], "label": "福生-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 急行周遊カード<br>(2顆骰子；使用回數：5-7回)</td><td>8000万</td></tr><tr><td> 新幹線周遊カード<br>(5顆骰子；使用回數：5-7回)</td><td>5億</td></tr><tr><td> シュレッダーカード<br>(移除原本無法丟棄的卡片)<br>(自行選擇，移除5-9張卡片)</td><td>4000万</td></tr><tr><td> 強奪飛びカード<br>(飛行到其他人的物件並搶走1件)</td><td>2億</td></tr><tr><td> 刀狩りカード<br>(偷1張卡片)<br>(低機率偷取2張卡片)</td><td>2億</td></tr><tr><td> 物件飛びカード<br>(飛往持有資金可獨占的物件車站)</td><td>4億</td></tr><tr><td> スペシャルカード<br>(指定骰子1~6)</td><td>4億</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系、搶奪卡"},
+	{ coords: [324.25, 566.33], "label": "国府津(國府津)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 特急周遊カード<br>(3顆骰子；使用回數：5-7回)</td><td>3億</td></tr><tr><td> 里帰りカード<br>(飛回起始發源地)</td><td>2000万</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系、返鄉卡"},
+	{ coords: [273.94, 407.33], "label": "寸又峡(寸又峽)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 特急周遊カード<br>(3顆骰子；使用回數：5-7回)</td><td>3億</td></tr><tr><td> ぶっとびカード<br>(隨機飛往物件車站)</td><td>4000万</td></tr><tr><td> 北へ！カード<br>(當前位置，向北方移動)</td><td>6000万</td></tr><tr><td> 西へ！カード<br>(當前位置，向西方移動)</td><td>6000万</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行)<br>(卡片銀行最多儲存32張卡片)<br>(使用後，可以繼續行動)</td><td>1億</td></tr><tr><td> ☆飛びカード<br>(卡片賣場)</td><td>2億</td></tr><tr><td> 物件飛びカード<br>(飛往持有資金可獨占的物件車站)</td><td>4億</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系、☆飛行卡"},
+	{ coords: [634.44, 189.45], "label": "内灘(內灘)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 新幹線カード<br>(5顆骰子)</td><td>7000万</td></tr><tr><td> 特急周遊カード<br>(3顆骰子；使用回數：5-7回)</td><td>3億</td></tr><tr><td> 乗っ取りカード<br>(可以搶占其他人物件)</td><td>2億</td></tr><tr><td> 強奪飛びカード<br>(飛行到其他人的物件並搶走1件)</td><td>2億</td></tr><tr><td> スペシャルカード<br>(指定骰子1~6)</td><td>4億</td></tr><tr><td> 物件飛びカード<br>(飛往持有資金可獨占的物件車站)</td><td>4億</td></tr><tr><td> パトカード<br>(持卡時，擊退扒手銀次1次)</td><td>10億</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系"},
+	{ coords: [500.94, 220.76], "label": "北濃-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 特急周遊カード<br>(3顆骰子；使用回數：5-7回)</td><td>3億</td></tr><tr><td> ぶっとびカード<br>(隨機飛往物件車站)</td><td>4000万</td></tr><tr><td> 北へ！カード<br>(當前位置，向北方移動)</td><td>6000万</td></tr><tr><td> 西へ！カード<br>(當前位置，向西方移動)</td><td>6000万</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行)<br>(卡片銀行最多儲存32張卡片)<br>(使用後，可以繼續行動)</td><td>1億</td></tr><tr><td> ☆飛びカード<br>(卡片賣場)</td><td>2億</td></tr><tr><td> 物件飛びカード<br>(飛往持有資金可獨占的物件車站)</td><td>4億</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系、☆飛行卡"},
+	{ coords: [533.44, 162.01], "label": "一乗谷(一乘谷)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> 特急カード<br>(3顆骰子)</td><td>4000万</td></tr><tr><td> 新幹線カード<br>(5顆骰子)</td><td>7000万</td></tr><tr><td> のぞみカード<br>(6顆骰子)</td><td>2億</td></tr><tr><td> はやぶさカード<br>(7顆骰子)</td><td>3億2000万</td></tr><tr><td> リニアカード<br>(10顆骰子)</td><td>4億</td></tr><tr><td> 徳政令カード<br>(使用時，持有資金為負數能歸零)<br>(使用後，可以繼續行動)</td><td>0円</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系"},
+	],
+//雪鏟車賣場車站shop_s
+	phoenix_shop_s: [
+	{ coords: [1622.44, 825.14], "label": "苗穂(苗穗)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> ラッセル車カード<br>(列車變成鏟雪車，在豪雪地區，骰子點數能正常擲出1-6)<br>(豪雪地區，未使用這張卡片，骰子點數只能擲出1-2)<br>(效果期間12個月)</td><td>4億</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系(鏟雪車)"},
+	{ coords: [1269.13, 742.33], "label": "新青森-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(1-49年)</td><td>販賣價格</td></tr><tr><td> ラッセル車カード<br>(列車變成鏟雪車，在豪雪地區，骰子點數能正常擲出1-6)<br>(豪雪地區，未使用這張卡片，骰子點數只能擲出1-2)<br>(效果期間12個月)</td><td>4億</td></tr></table>", group: 'X', mk: 'C' , jpcard: "移動系(鏟雪車)"},
+	],
+//歷史英雄D hero
+	phoenix_hero: [
+	{ coords: [1622.13, 811.38], "label": "クラーク博士(克拉克博士)-札幌（北海道）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>クラーク博士<br>克拉克博士</td></tr><tr><td>地點</td><td>札幌（北海道）</td></tr><tr><td>獨占金額</td><td>2638億5000万円</td></tr><tr><td>效果</td><td>未經許可將持有資金，強制購買無主的物件。<br>（高價格物件優先購買）<br>（條件：每年3月或4月，初登場無視條件）</td></tr></table>", group: 'A', mk: 'D' , jphero: "2638.5億"},
+	{ coords: [1463.63, 755.88], "label": "土方歳三(土方歲三)-函館（北海道）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>土方歳三<br>土方歲三</td></tr><tr><td>地點</td><td>函館（北海道）</td></tr><tr><td>獨占金額</td><td>189億8000万円</td></tr><tr><td>效果</td><td>向其他人奪取物件。</td></tr></table>", group: '', mk: 'D' , jphero: "189.8億"},
+	{ coords: [893.81, 797.54], "label": "伊達政宗-仙台（宮城県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>伊達政宗</td></tr><tr><td>地點</td><td>仙台（宮城県）</td></tr><tr><td>獨占金額</td><td>5495億3000万円</td></tr><tr><td>效果</td><td>所持的移動系卡片，升級移動系卡片。<br>（能升級成周遊卡）</td></tr><tr><td>效果</td><td>若沒有移動系卡片，則會贈送1張。</td></tr></table>", group: '', mk: 'D' , jphero: "5495.3億"},
+	{ coords: [850.50, 714.60], "label": "上杉鷹山-米沢（山形県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>上杉鷹山</td></tr><tr><td>地點</td><td>米沢（山形県）</td></tr><tr><td>獨占金額</td><td>9億円</td></tr><tr><td>效果</td><td>5個月期間其他人無法購買物件與卡片。</td></tr><tr><td>效果</td><td>5個月期間限制其他人無法使用資金相關卡片。</td></tr></table>", group: '', mk: 'D' , jphero: "9億"},
+	{ coords: [807.25, 714.98], "label": "野口英世-猪苗代（福島県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>野口英世</td></tr><tr><td>地點</td><td>猪苗代（福島県）</td></tr><tr><td>獨占金額</td><td>24億1000万円</td></tr><tr><td>效果</td><td>消滅惡魔系卡片。<br>（「小惡魔卡」、「惡魔卡」、「大惡魔卡」）</td></tr></table>", group: '', mk: 'D' , jphero: "24.1億"},
+	{ coords: [749.63, 410.79], "label": "上杉謙信-上越（新潟県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>上杉謙信</td></tr><tr><td>地點</td><td>上越（新潟県）</td></tr><tr><td>獨占金額</td><td>5436億3000万円</td></tr><tr><td>效果</td><td>至少停止3個月窮神惡行。</td></tr><tr><td>效果</td><td>偷取其他人擁有的物件。</td></tr><tr><td>效果</td><td>一定機率將持有資金的10分之1給最後一名的社長。</td></tr></table>", group: '', mk: 'D' , jphero: "5436.3億"},
+	{ coords: [807.13, 549.20], "label": "堀部安兵衛-新発田（新潟県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>堀部安兵衛</td></tr><tr><td>地點</td><td>新発田（新潟県）</td></tr><tr><td>獨占金額</td><td>10億6000万円</td></tr><tr><td>效果</td><td>之前失去的已獨占的物件，能重新購買物件。<br>（不包含失去後，已被其他人獨占物件）</td></tr></table>", group: '', mk: 'D' , jphero: "10.6億"},
+	{ coords: [583.69, 852.81], "label": "水戸黄門(水戶黃門)-水戸（茨城県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>水戸黄門<br>水戶黃門</td></tr><tr><td>地點</td><td>水戸（茨城県）</td></tr><tr><td>獨占金額</td><td>235億5000万円</td></tr><tr><td>效果</td><td>扒手銀次出現時，有高機率擊退。</td></tr><tr><td>效果</td><td>高機率，無效化「德古拉寶寶卡」。</td></tr><tr><td>效果</td><td>高機率，無效化「持有資金歸零卡」。<br>（條件：50年以後）</td></tr></table>", group: '', mk: 'D' , jphero: "235.5億"},
+	{ coords: [746.06, 728.73], "label": "那須与一(那須與一)-那須（栃木県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>那須与一<br>那須與一</td></tr><tr><td>地點</td><td>那須（栃木県）</td></tr><tr><td>獨占金額</td><td>26億2000万円</td></tr><tr><td>效果</td><td>投擲骰子，按照骰子數字獲得無主的物件。</td></tr></table>", group: '', mk: 'D' , jphero: "26.2億"},
+	{ coords: [615.56, 594.38], "label": "国定忠治(國定忠治)-卡片車站（群馬県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>国定忠治<br>國定忠治</td></tr><tr><td>地點</td><td>卡片車站（群馬県）伊勢崎上方1格</td></tr><tr><td>獨占金額</td><td>無，特殊條件</td></tr><tr><td>效果</td><td>低機率，獲得100億，以後這些的夥伴(5位)，全部解任。<br>（條件：夥伴擁有平賀源內、源賴朝、水戶黃門、那須與一、鼠小僧）</td></tr></table>", group: '', mk: 'D' , jphero: "特殊條件"},
+	{ coords: [497.44, 852.95], "label": "伊能忠敬-佐原（千葉県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>伊能忠敬</td></tr><tr><td>地點</td><td>佐原（千葉県）</td></tr><tr><td>獨占金額</td><td>12億3000万円</td></tr><tr><td>效果</td><td>選擇4個中的1個物件車站獨占。<br>（條件：50年1月以後）</td></tr></table>", group: '', mk: 'D' , jphero: "12.3億"},
+	{ coords: [583.81, 576.35], "label": "渋沢栄一(涉澤榮一)-深谷（埼玉県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>渋沢栄一<br>涉澤榮一</td></tr><tr><td>地點</td><td>深谷（埼玉県）</td></tr><tr><td>獨占金額</td><td>233億2000万円</td></tr><tr><td>效果</td><td>隨機獲得1個價格10億以上的物件。<br>（價格上限隨著年數經過，能獲得的更高價格的物件）</td></tr></table>", group: '', mk: 'D' , jphero: "233.2億"},
+	{ coords: [454.00, 728.66], "label": "平賀源内(平賀源內)-深川（東京都）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>平賀源内<br>平賀源內</td></tr><tr><td>地點</td><td>深川（東京都）</td></tr><tr><td>獨占金額</td><td>8億4000万円</td></tr><tr><td>效果</td><td>有機率，使用6種發明品的其中1種。</td></tr><tr><td>效果</td><td>絆腳機：讓其他人休假3個月。</td></tr><tr><td>效果</td><td>閃近機：移動到目的地的7-13格內。</td></tr><tr><td>效果</td><td>物件購買機：半價購買所持金額以下的物件。</td></tr><tr><td>效果</td><td>卡片製造機：3張卡片選擇獲得其中1種。<br>（共有5種）</td></tr><tr><td>效果</td><td>獨占購買機：半價獨占購買所持金額以下的物件車站。<br>（條件：16年4月~31年3月）</td></tr><tr><td>效果</td><td>範圍購買機：購買一定範圍內的所有無主的物件車站。<br>（條件：32年4月以後）</td></tr></table>", group: '', mk: 'D' , jphero: "8.4億"},
+	{ coords: [439.63, 700.91], "label": "坂本竜馬(坂本龍馬)-神田（東京都）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>坂本竜馬<br>坂本龍馬</td></tr><tr><td>地點</td><td>神田（東京都）</td></tr><tr><td>獨占金額</td><td>100億4000万円</td></tr><tr><td>效果</td><td>搶奪其他人的1-3物件。<br>（初登場，若沒有搶奪的物件，獲得「新幹線周遊卡」）</td></tr></table>", group: '', mk: 'D' , jphero: "100.4億"},
+	{ coords: [410.69, 673.48], "label": "勝海舟-赤坂（東京都）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>勝海舟</td></tr><tr><td>地點</td><td>赤坂（東京都）</td></tr><tr><td>獨占金額</td><td>165億円</td></tr><tr><td>效果</td><td>隨機獲得1個價格10億以上的物件車站的所有物件。<br>（價格上限隨著年數經過，能獲得的更高價格的物件）</td></tr></table>", group: '', mk: 'D' , jphero: "165億"},
+	{ coords: [482.81, 714.73], "label": "ネズミ小僧(鼠小僧)-浅草（東京都）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>ネズミ小僧<br>鼠小僧</td></tr><tr><td>地點</td><td>浅草（東京都）</td></tr><tr><td>獨占金額</td><td>409億6000万円</td></tr><tr><td>效果</td><td>低機率，向其他人奪取持有資金。</td></tr><tr><td>效果</td><td>若持有「定時炸彈卡」，可消除此卡片。<br>（消除卡片一次1張）</td></tr></table>", group: '', mk: 'D' , jphero: "409.6億"},
+	{ coords: [454.00, 673.38], "label": "大久保利通-四谷（東京都）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>大久保利通</td></tr><tr><td>地點</td><td>四谷（東京都）</td></tr><tr><td>獨占金額</td><td>704億2000万円</td></tr><tr><td>效果</td><td>將在目的地車站區域的其他人傳到其他區域。</td></tr><tr><td>效果</td><td>低機率，已聘任此英雄的某人低於5張卡片，所有人將所有卡片丟棄。<br>（包含自己也要丟棄所有卡片）</td></tr></table>", group: '', mk: 'D' , jphero: "704.2億"},
+	{ coords: [425.19, 700.98], "label": "西郷隆盛(西鄉隆盛)-日本橋（東京都）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>西郷隆盛<br>西鄉隆盛</td></tr><tr><td>地點</td><td>日本橋（東京都）</td></tr><tr><td>獨占金額</td><td>901億円</td></tr><tr><td>效果</td><td>全國募集資金，分給所有人資金，自己獲得最多。</td></tr><tr><td>效果</td><td>呼喚「西鄉咚」跟隨，每月獲得幫助，直到某個人抵達目的地車站。</td></tr></table>", group: '', mk: 'D' , jphero: "901億"},
+	{ coords: [454.00, 659.48], "label": "沖田総司(沖田總司)-千駄ヶ谷（東京都）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>沖田総司<br>沖田總司</td></tr><tr><td>地點</td><td>千駄ヶ谷（東京都）</td></tr><tr><td>獨占金額</td><td>2317億7000万円</td></tr><tr><td>效果</td><td>搶奪其他人高價格的1個物件。<br>（價格上限隨著年數經過，能搶奪的更高價格的物件）</td></tr></table>", group: '', mk: 'D' , jphero: "2317.7億"},
+	{ coords: [410.69, 701.00], "label": "太田道灌-東京（東京都）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>太田道灌</td></tr><tr><td>地點</td><td>東京（東京都）</td></tr><tr><td>獨占金額</td><td>1兆5012億8000万円</td></tr><tr><td>效果</td><td>在12個月的時間內，其他人無法進入山手線的區域內，<br>原本在山手線區域內的其他人，在12個月的時間內無法離開區域外。</td></tr></table>", group: '', mk: 'D' , jphero: "1.5兆"},
+	{ coords: [324.25, 552.64], "label": "二宮金次郎-小田原（神奈川県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>二宮金次郎</td></tr><tr><td>地點</td><td>小田原（神奈川県）</td></tr><tr><td>獨占金額</td><td>5000万円</td></tr><tr><td>效果</td><td>持有其中一個農林物件，收益率會依據骰子點數（%）來上升。<br>（例如：原收益率10%，骰子點數擲出6，改為16%）</td></tr><tr><td>效果</td><td>列出擁有的10個最賺錢的農林物件收益率（無特殊效果）。</td></tr></table>", group: '', mk: 'D' , jphero: "5000.万"},
+	{ coords: [309.81, 628.45], "label": "源頼朝(源賴朝)-鎌倉（神奈川県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>源頼朝<br>源賴朝</td></tr><tr><td>地點</td><td>鎌倉（神奈川県）</td></tr><tr><td>獨占金額</td><td>10億円</td></tr><tr><td>效果</td><td>關東地區的物件車站中，購買1-4個無主的物件。</td></tr></table>", group: '', mk: 'D' , jphero: "10億"},
+	{ coords: [634.38, 383.10], "label": "石川数正(石川數正)-松本（長野県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>石川数正<br>石川數正</td></tr><tr><td>地點</td><td>松本（長野県）</td></tr><tr><td>獨占金額</td><td>6億7000万円</td></tr><tr><td>效果</td><td>購買價格1000萬無主的物件。</td></tr><tr><td>效果</td><td>購買價格1億無主的物件。<br>（條件：32年4月以後）</td></tr></table>", group: '', mk: 'D' , jphero: "6.7億"},
+	{ coords: [677.38, 410.79], "label": "葛飾北斎(葛飾北齋)-小布施（長野県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>葛飾北斎<br>葛飾北齋</td></tr><tr><td>地點</td><td>小布施（長野県）</td></tr><tr><td>獨占金額</td><td>9億4000万円</td></tr><tr><td>效果</td><td>根據繪畫內容（共12種），獲得不同的臨時收入。</td></tr></table>", group: '', mk: 'D' , jphero: "9.4億"},
+	{ coords: [454.06, 438.35], "label": "武田信玄-甲府（山梨県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>武田信玄</td></tr><tr><td>地點</td><td>甲府（山梨県）</td></tr><tr><td>獨占金額</td><td>32億5000万円</td></tr><tr><td>效果</td><td>「風」、「林」、「火」、「山」，四種擇一能力發動。</td></tr><tr><td>效果</td><td>風：投擲骰子，用「風」吹飛，將其他人遠離車站目的地。</td></tr><tr><td>效果</td><td>林：用「林」限制，對其他人使用其中一種卡片。<br>（「封印卡」/「冬眠卡」/「牛步卡」）</td></tr><tr><td>效果</td><td>火：用「火」燃燒，減少其他人的持有資金。</td></tr><tr><td>效果</td><td>山：用「山」困住，強制其他人休息2個月。</td></tr></table>", group: '', mk: 'D' , jphero: "32.5億"},
+	{ coords: [219.69, 510.95], "label": "ペリー(培里)-下田（静岡県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>ペリー<br>培里</td></tr><tr><td>地點</td><td>下田（静岡県）</td></tr><tr><td>獨占金額</td><td>15億3000万円</td></tr><tr><td>效果</td><td>將距離最近目的地車站的其他人，放置1-3大便。</td></tr></table>", group: '', mk: 'D' , jphero: "15.3億"},
+	{ coords: [591.19, 176.01], "label": "源義経(源義經)-小松（石川県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>源義経<br>源義經</td></tr><tr><td>地點</td><td>小松（石川県）</td></tr><tr><td>獨占金額</td><td>647億3000万円</td></tr><tr><td>效果</td><td>距離目的地車站20格以內，從5個物件車站中，選擇車站前往並可以購買物件。<br>（條件：距離目的地車站16格以上）</td></tr></table>", group: '', mk: 'D' , jphero: "647.3億"},
+	{ coords: [342.25, 137.83], "label": "竹中半兵衛-垂井（岐阜県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>竹中半兵衛</td></tr><tr><td>地點</td><td>垂井（岐阜県）</td></tr><tr><td>獨占金額</td><td>3億5000万円</td></tr><tr><td>效果</td><td>消除惡魔系卡片。<br>（除了「小惡魔卡」、「惡魔卡」、「大惡魔卡」，都可消除）</td></tr></table>", group: '', mk: 'D' , jphero: "3.5億"},
+	{ coords: [266.50, 241.51], "label": "徳川家康(德川家康)-岡崎（愛知県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>徳川家康<br>德川家康</td></tr><tr><td>地點</td><td>岡崎（愛知県）</td></tr><tr><td>獨占金額</td><td>120億円</td></tr><tr><td>效果</td><td>隨機選擇一個物件車站，可以獨占物件車站。</td></tr><tr><td>效果</td><td>德川四天王，任一人隨機登場。</td></tr><tr><td>效果</td><td>酒井忠次：移動到附近卡片賣場車站。</td></tr><tr><td>效果</td><td>本田忠勝：獨占附近的1-4個物件。</td></tr><tr><td>效果</td><td>榊原康政：選擇一個地區，飛往此區域的隨機車站。<br>（條件：32年4月以後）</td></tr><tr><td>效果</td><td>井伊直政：可以使用卡片銀行車站。<br>（條件：32年4月以後）</td></tr></table>", group: '', mk: 'D' , jphero: "120億"},
+	{ coords: [295.38, 165.39], "label": "豊臣秀吉-栄（愛知県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>豊臣秀吉</td></tr><tr><td>地點</td><td>栄（愛知県）</td></tr><tr><td>獨占金額</td><td>203億6000万円</td></tr><tr><td>效果</td><td>能以九折、四分之一、半價購入物件。<br>（例如半價：1000億，能以500億購買）</td></tr></table>", group: '', mk: 'D' , jphero: "203.6億"},
+	{ coords: [309.88, 165.39], "label": "織田信長-名古屋（愛知県）", "info": "<table class='bordered-table'><tr><td>名稱</td><td>織田信長</td></tr><tr><td>地點</td><td>名古屋（愛知県）</td></tr><tr><td>獨占金額</td><td>512億4000万円</td></tr><tr><td>效果</td><td>毀滅卡片，摧毀其他人的卡片。</td></tr><tr><td>效果</td><td>毀滅炸彈，低機率，摧毀「定時炸彈卡」。</td></tr><tr><td>效果</td><td>毀滅距離，低機率，若距離目的地車站超過40格，直接前往目的地車站。</td></tr><tr><td>效果</td><td>毀滅弱小，低機率，直接將窮神轉為窮神大魔王。</td></tr></table>", group: '', mk: 'D' , jphero: "512.4億"},
+	],
+	phoenix_shop50Y: [
+	{ coords: [1910.81, 853.01], "label": "宗谷-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> のぞみ周遊カード<br>(6顆骰子；使用回數：5-7回)</td><td>40億</td></tr><tr><td> 北へ！カード<br>(當前位置，向北方移動)</td><td>2億4000万</td></tr><tr><td> 西へ！カード<br>(當前位置，向西方移動)</td><td>2億4000万</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行；卡片銀行最多儲存32張卡片；使用後，可以繼續行動)</td><td>4億</td></tr><tr><td> ぶっとび周遊カード<br>(隨機飛往物件車站；使用回數：5-9回)</td><td>16億</td></tr><tr><td> ☆飛び周遊カード<br>(卡片賣場；使用回數：7-9回)</td><td>16億</td></tr><tr><td> 徳政令カード<br>(使用時，持有資金為負數能歸零；使用後，可以繼續行動)</td><td>0円</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系"},
+	{ coords: [1737.69, 1046.20], "label": "女満別(女滿別)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> はやぶさカード<br>(7顆骰子)</td><td>48億</td></tr><tr><td> リニア周遊カード<br>(10顆骰子；使用回數：9-15回)</td><td>80億</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行；卡片銀行最多儲存32張卡片；使用後，可以繼續行動)</td><td>4億</td></tr><tr><td> 強奪飛び周遊カード<br>(飛行到其他人的物件並搶走1件；使用回數：5-8回)</td><td>40億</td></tr><tr><td> パトカード<br>(持卡時，擊退扒手銀次1次)</td><td>40億</td></tr><tr><td> スペシャルズカード<br>(指定骰子1~6；使用回數：5-6回)</td><td>64億</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系"},
+	{ coords: [1622.44, 797.51], "label": "真駒内(真駒內)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> 特急周遊カード<br>(3顆骰子；使用回數：5-7回)</td><td>12億</td></tr><tr><td> のぞみ周遊カード<br>(6顆骰子；使用回數：5-7回)</td><td>40億</td></tr><tr><td> シュレッダーカード<br>(移除原本無法丟棄的卡片；自行選擇，移除5-9張卡片)</td><td>1億6000万</td></tr><tr><td> 期間延長カード<br>(將周遊系列卡重置使用次數；使用後，可以繼續行動)</td><td>4億</td></tr><tr><td> パトカード<br>(持卡時，擊退扒手銀次1次)</td><td>40億</td></tr><tr><td> スペシャルズカード<br>(指定骰子1~6；使用回數：5-6回)</td><td>64億</td></tr><tr><td> 徳政令カード<br>(使用時，持有資金為負數能歸零；使用後，可以繼續行動)</td><td>0円</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系、時效延長卡"},
+	{ coords: [1608.00, 825.14], "label": "新札幌-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> はやぶさ周遊カード<br>(7顆骰子；使用回數：7-11回)</td><td>48億</td></tr><tr><td> シュレッダーカード<br>(移除原本無法丟棄的卡片；自行選擇，移除5-9張卡片)</td><td>1億6000万</td></tr><tr><td> 牛歩カード<br>(指定某人3-4個月一次只能走1格)</td><td>8億</td></tr><tr><td> 最果てカード<br>(指定其他人放到離目的地最遠位置)</td><td>8億</td></tr><tr><td> 周遊禁止カード<br>(讓其他人的周遊系列卡改為僅限1次使用的一般卡片)</td><td>16億</td></tr><tr><td> 徳政令カード<br>(使用時，持有資金為負數能歸零；使用後，可以繼續行動)</td><td>0円</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系、高級複製卡(1-49年)、攻擊卡(50年後)"},
+	{ coords: [1593.50, 839.01], "label": "千歳(千歲)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> 新幹線カード<br>(5顆骰子)</td><td>20億</td></tr><tr><td> はやぶさ周遊カード<br>(7顆骰子；使用回數：7-11回)</td><td>48億</td></tr><tr><td> スペシャルカード<br>(指定骰子1~6)</td><td>16億</td></tr><tr><td> 乗っ取り周遊カード<br>(可以搶占其他人物件；使用回數：5-6回)</td><td>32億</td></tr><tr><td> パトカード<br>(持卡時，擊退扒手銀次1次)</td><td>40億</td></tr><tr><td> 物件飛び周遊カード<br>(飛往持有資金可獨占的物件車站；使用回數：5-9回)</td><td>40億</td></tr><tr><td> 徳政令カード<br>(使用時，持有資金為負數能歸零；使用後，可以繼續行動)</td><td>0円</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系、傳送卡"},
+	{ coords: [1463.69, 742.33], "label": "五稜郭-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> はやぶさ周遊カード<br>(7顆骰子；使用回數：7-11回)</td><td>48億</td></tr><tr><td> リニア周遊カード<br>(10顆骰子；使用回數：9-15回)</td><td>80億</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行；卡片銀行最多儲存32張卡片；使用後，可以繼續行動)</td><td>4億</td></tr><tr><td> 物件飛び周遊カード<br>(飛往持有資金可獨占的物件車站；使用回數：5-9回)</td><td>40億</td></tr><tr><td> 強奪飛び周遊カード<br>(飛行到其他人的物件並搶走1件；使用回數：5-8回)</td><td>40億</td></tr><tr><td> パトカード<br>(持卡時，擊退扒手銀次1次)</td><td>40億</td></tr><tr><td> スペシャルズカード<br>(指定骰子1~6；使用回數：5-6回)</td><td>64億</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系"},
+	{ coords: [1370.00, 797.58], "label": "恐山-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> はやぶさ周遊カード<br>(7顆骰子；使用回數：7-11回)</td><td>48億</td></tr><tr><td> 北へ！カード<br>(當前位置，向北方移動)</td><td>2億4000万</td></tr><tr><td> 西へ！カード<br>(當前位置，向西方移動)</td><td>2億4000万</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行；卡片銀行最多儲存32張卡片；使用後，可以繼續行動)</td><td>4億</td></tr><tr><td> ぶっとび周遊カード<br>(隨機飛往物件車站；使用回數：5-9回)</td><td>16億</td></tr><tr><td> 徳政令カード<br>(使用時，持有資金為負數能歸零；使用後，可以繼續行動)</td><td>0円</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系、☆飛行卡"},
+	{ coords: [821.81, 728.45], "label": "二本松-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> のぞみ周遊カード<br>(6顆骰子；使用回數：5-7回)</td><td>40億</td></tr><tr><td> 北へ！カード<br>(當前位置，向北方移動)</td><td>2億4000万</td></tr><tr><td> 西へ！カード<br>(當前位置，向西方移動)</td><td>2億4000万</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行；卡片銀行最多儲存32張卡片；使用後，可以繼續行動)</td><td>4億</td></tr><tr><td> ぶっとび周遊カード<br>(隨機飛往物件車站；使用回數：5-9回)</td><td>16億</td></tr><tr><td> ☆飛び周遊カード<br>(卡片賣場；使用回數：7-9回)</td><td>16億</td></tr><tr><td> 徳政令カード<br>(使用時，持有資金為負數能歸零；使用後，可以繼續行動)</td><td>0円</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系"},
+	{ coords: [749.75, 839.08], "label": "袋田-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> のぞみ周遊カード<br>(6顆骰子；使用回數：5-7回)</td><td>40億</td></tr><tr><td> 刀狩りカード<br>(偷1張卡片；低機率偷取2張卡片)</td><td>8億</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系、搶奪卡"},
+	{ coords: [612.81, 659.64], "label": "葛生-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> はやぶさカード<br>(7顆骰子)</td><td>48億</td></tr><tr><td> リニア周遊カード<br>(10顆骰子；使用回數：9-15回)</td><td>80億</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行；卡片銀行最多儲存32張卡片；使用後，可以繼續行動)</td><td>4億</td></tr><tr><td> 強奪飛び周遊カード<br>(飛行到其他人的物件並搶走1件；使用回數：5-8回)</td><td>40億</td></tr><tr><td> パトカード<br>(持卡時，擊退扒手銀次1次)</td><td>40億</td></tr><tr><td> スペシャルズカード<br>(指定骰子1~6；使用回數：5-6回)</td><td>64億</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系"},
+	{ coords: [338.63, 825.20], "label": "大原-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> はやぶさ周遊カード<br>(7顆骰子；使用回數：7-11回)</td><td>48億</td></tr><tr><td> 北へ！カード<br>(當前位置，向北方移動)</td><td>2億4000万</td></tr><tr><td> 西へ！カード<br>(當前位置，向西方移動)</td><td>2億4000万</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行；卡片銀行最多儲存32張卡片；使用後，可以繼續行動)</td><td>4億</td></tr><tr><td> ぶっとび周遊カード<br>(隨機飛往物件車站；使用回數：5-9回)</td><td>16億</td></tr><tr><td> 徳政令カード<br>(使用時，持有資金為負數能歸零；使用後，可以繼續行動)</td><td>0円</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系、☆飛行卡"},
+	{ coords: [353.19, 742.58], "label": "海ほたる(海螢)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> はやぶさ周遊カード<br>(7顆骰子；使用回數：7-11回)</td><td>48億</td></tr><tr><td> リニア周遊カード<br>(10顆骰子；使用回數：9-15回)</td><td>80億</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行；卡片銀行最多儲存32張卡片；使用後，可以繼續行動)</td><td>4億</td></tr><tr><td> 物件飛び周遊カード<br>(飛往持有資金可獨占的物件車站；使用回數：5-9回)</td><td>40億</td></tr><tr><td> 強奪飛び周遊カード<br>(飛行到其他人的物件並搶走1件；使用回數：5-8回)</td><td>40億</td></tr><tr><td> パトカード<br>(持卡時，擊退扒手銀次1次)</td><td>40億</td></tr><tr><td> スペシャルズカード<br>(指定骰子1~6；使用回數：5-6回)</td><td>64億</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系"},
+	{ coords: [381.94, 687.20], "label": "高輪ゲートウェイ(高輪Gateway)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> はやぶさ周遊カード<br>(7顆骰子；使用回數：7-11回)</td><td>48億</td></tr><tr><td> リニア周遊カード<br>(10顆骰子；使用回數：9-15回)</td><td>40億</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行；卡片銀行最多儲存32張卡片；使用後，可以繼續行動)</td><td>4億</td></tr><tr><td> 物件飛び周遊カード<br>(飛往持有資金可獨占的物件車站；使用回數：5-9回)</td><td>40億</td></tr><tr><td> パトカード<br>(持卡時，擊退扒手銀次1次)</td><td>40億</td></tr><tr><td> 強奪飛び周遊カード<br>(飛行到其他人的物件並搶走1件；使用回數：5-8回)</td><td>40億</td></tr><tr><td> スペシャルズカード<br>(指定骰子1~6；使用回數：5-6回)</td><td>64億</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系、高級移動卡"},
+	{ coords: [482.88, 618.14], "label": "鷺宮-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> 特急周遊カード<br>(3顆骰子；使用回數：5-7回)</td><td>12億</td></tr><tr><td> のぞみ周遊カード<br>(6顆骰子；使用回數：5-7回)</td><td>40億</td></tr><tr><td> シュレッダーカード<br>(移除原本無法丟棄的卡片；自行選擇，移除5-9張卡片)</td><td>1億6000万</td></tr><tr><td> 期間延長カード<br>(將周遊系列卡重置使用次數；使用後，可以繼續行動)</td><td>4億</td></tr><tr><td> パトカード<br>(持卡時，擊退扒手銀次1次)</td><td>40億</td></tr><tr><td> スペシャルズカード<br>(指定骰子1~6；使用回數：5-6回)</td><td>64億</td></tr><tr><td> 徳政令カード<br>(使用時，持有資金為負數能歸零；使用後，可以繼續行動)</td><td>0円</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系、時效延長卡"},
+	{ coords: [454.13, 618.08], "label": "中野-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> はやぶさカード<br>(7顆骰子)</td><td>48億</td></tr><tr><td> リニア周遊カード<br>(10顆骰子；使用回數：9-15回)</td><td>80億</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行；卡片銀行最多儲存32張卡片；使用後，可以繼續行動)</td><td>4億</td></tr><tr><td> 強奪飛び周遊カード<br>(飛行到其他人的物件並搶走1件；使用回數：5-8回)</td><td>40億</td></tr><tr><td> パトカード<br>(持卡時，擊退扒手銀次1次)</td><td>40億</td></tr><tr><td> スペシャルズカード<br>(指定骰子1~6；使用回數：5-6回)</td><td>64億</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系"},
+	{ coords: [497.38, 548.89], "label": "福生-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> のぞみ周遊カード<br>(6顆骰子；使用回數：5-7回)</td><td>40億</td></tr><tr><td> 北へ！カード<br>(當前位置，向北方移動)</td><td>2億4000万</td></tr><tr><td> 西へ！カード<br>(當前位置，向西方移動)</td><td>2億4000万</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行；卡片銀行最多儲存32張卡片；使用後，可以繼續行動)</td><td>4億</td></tr><tr><td> ぶっとび周遊カード<br>(隨機飛往物件車站；使用回數：5-9回)</td><td>16億</td></tr><tr><td> ☆飛び周遊カード<br>(卡片賣場；使用回數：7-9回)</td><td>16億</td></tr><tr><td> 物件飛び周遊カード<br>(飛往持有資金可獨占的物件車站；使用回數：5-9回)</td><td>40億</td></tr><tr><td> 徳政令カード<br>(使用時，持有資金為負數能歸零；使用後，可以繼續行動)</td><td>0円</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系、搶奪卡"},
+	{ coords: [324.25, 566.33], "label": "国府津(國府津)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> はやぶさ周遊カード<br>(7顆骰子；使用回數：7-11回)</td><td>48億</td></tr><tr><td> 里帰りカード<br>(飛回起始發源地)</td><td>8000万</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系、返鄉卡"},
+	{ coords: [273.94, 407.33], "label": "寸又峡(寸又峽)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> はやぶさ周遊カード<br>(7顆骰子；使用回數：7-11回)</td><td>48億</td></tr><tr><td> 北へ！カード<br>(當前位置，向北方移動)</td><td>2億4000万</td></tr><tr><td> 西へ！カード<br>(當前位置，向西方移動)</td><td>2億4000万</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行；卡片銀行最多儲存32張卡片；使用後，可以繼續行動)</td><td>4億</td></tr><tr><td> ぶっとび周遊カード<br>(隨機飛往物件車站；使用回數：5-9回)</td><td>16億</td></tr><tr><td> 徳政令カード<br>(使用時，持有資金為負數能歸零；使用後，可以繼續行動)</td><td>0円</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系、☆飛行卡"},
+	{ coords: [634.44, 189.45], "label": "内灘(內灘)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> はやぶさカード<br>(7顆骰子)</td><td>48億</td></tr><tr><td> リニア周遊カード<br>(10顆骰子；使用回數：9-15回)</td><td>80億</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行；卡片銀行最多儲存32張卡片；使用後，可以繼續行動)</td><td>4億</td></tr><tr><td> 強奪飛び周遊カード<br>(飛行到其他人的物件並搶走1件；使用回數：5-8回)</td><td>40億</td></tr><tr><td> パトカード<br>(持卡時，擊退扒手銀次1次)</td><td>40億</td></tr><tr><td> スペシャルズカード<br>(指定骰子1~6；使用回數：5-6回)</td><td>64億</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系"},
+	{ coords: [500.94, 220.76], "label": "北濃-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> はやぶさ周遊カード<br>(7顆骰子；使用回數：7-11回)</td><td>48億</td></tr><tr><td> 北へ！カード<br>(當前位置，向北方移動)</td><td>2億4000万</td></tr><tr><td> 西へ！カード<br>(當前位置，向西方移動)</td><td>2億4000万</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行；卡片銀行最多儲存32張卡片；使用後，可以繼續行動)</td><td>4億</td></tr><tr><td> ぶっとび周遊カード<br>(隨機飛往物件車站；使用回數：5-9回)</td><td>16億</td></tr><tr><td> 徳政令カード<br>(使用時，持有資金為負數能歸零；使用後，可以繼續行動)</td><td>0円</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系、☆飛行卡"},
+	{ coords: [533.44, 162.01], "label": "一乗谷(一乘谷)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> はやぶさ周遊カード<br>(7顆骰子；使用回數：7-11回)</td><td>48億</td></tr><tr><td> リニア周遊カード<br>(10顆骰子；使用回數：9-15回)</td><td>80億</td></tr><tr><td> カードバンクカード<br>(能儲存自己的卡片到卡片銀行；卡片銀行最多儲存32張卡片；使用後，可以繼續行動)</td><td>4億</td></tr><tr><td> 物件飛び周遊カード<br>(飛往持有資金可獨占的物件車站；使用回數：5-9回)</td><td>40億</td></tr><tr><td> 強奪飛び周遊カード<br>(飛行到其他人的物件並搶走1件；使用回數：5-8回)</td><td>40億</td></tr><tr><td> パトカード<br>(持卡時，擊退扒手銀次1次)</td><td>40億</td></tr><tr><td> スペシャルズカード<br>(指定骰子1~6；使用回數：5-6回)</td><td>64億</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系"},
+	],
+//雪鏟車賣場車站shop_s50Y
+	phoenix_shop_s50Y: [
+	{ coords: [1622.44, 825.14], "label": "苗穂(苗穗)-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> ラッセル車カード<br>(列車變成鏟雪車，在豪雪地區，骰子點數能正常擲出1-6；豪雪地區，未使用這張卡片，骰子點數只能擲出1-2；效果期間12個月)</td><td>16億</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系(鏟雪車)"},
+	{ coords: [1269.13, 742.33], "label": "新青森-卡片賣場車站", "info": "<table class='bordered-table'><tr><td>卡片名稱(50年以後)</td><td>販賣價格</td></tr><tr><td> ラッセル車カード<br>(列車變成鏟雪車，在豪雪地區，骰子點數能正常擲出1-6；豪雪地區，未使用這張卡片，骰子點數只能擲出1-2；效果期間12個月)</td><td>16億</td></tr></table>", group: 'X', mk: 'J' , jpcard: "移動系(鏟雪車)"},
+	],
+//搭乘直昇機站E ramp
+	phoenix_ramp: [
+	{ coords: [1254.56, 659.26], "label": "十二湖-直昇機車站", "info": "可以飛往東日本其中4處的直昇機車站。", group: 'C', mk: 'E' , jpramp: "搭乘直昇機"},
+	{ coords: [338.69, 784.01], "label": "久留里-直昇機車站", "info": "可以飛往東日本其中4處的直昇機車站。", group: 'C', mk: 'E' , jpramp: "搭乘直昇機"},
+	{ coords: [1521.25, 977.20], "label": "大樹町-直昇機車站", "info": "可以飛往東日本其中4處的直昇機車站。", group: 'C', mk: 'E' , jpramp: "搭乘直昇機"},
+	{ coords: [1853.13, 894.14], "label": "中頓別-直昇機車站", "info": "可以飛往東日本其中4處的直昇機車站。", group: 'C', mk: 'E' , jpramp: "搭乘直昇機"},
+	{ coords: [1665.56, 1129.20], "label": "中標津-直昇機車站", "info": "可以飛往東日本其中4處的直昇機車站。", group: 'C', mk: 'E' , jpramp: "搭乘直昇機"},
+	{ coords: [706.63, 852.89], "label": "天下野-直昇機車站", "info": "可以飛往東日本其中4處的直昇機車站。", group: 'C', mk: 'E' , jpramp: "搭乘直昇機"},
+	{ coords: [454.06, 852.76], "label": "匝瑳-直昇機車站", "info": "可以飛往東日本其中4處的直昇機車站。", group: 'C', mk: 'E' , jpramp: "搭乘直昇機"},
+	{ coords: [252.31, 448.76], "label": "用宗-直昇機車站", "info": "可以飛往東日本其中4處的直昇機車站。", group: 'C', mk: 'E' , jpramp: "搭乘直昇機"},
+	{ coords: [201.62, 237.70], "label": "田原-直昇機車站", "info": "可以飛往東日本其中4處的直昇機車站。", group: 'C', mk: 'E' , jpramp: "搭乘直昇機"},
+	{ coords: [490.25, 147.89], "label": "気比(氣比)-直昇機車站", "info": "可以飛往東日本其中4處的直昇機車站。", group: 'C', mk: 'E' , jpramp: "搭乘直昇機"},
+	{ coords: [1579.19, 700.76], "label": "寿都町(壽都町)-直昇機車站", "info": "可以飛往東日本其中4處的直昇機車站。", group: 'C', mk: 'E' , jpramp: "搭乘直昇機"},
+	{ coords: [1196.94, 880.45], "label": "侍浜(侍濱)-直昇機車站", "info": "可以飛往東日本其中4處的直昇機車站。", group: 'C', mk: 'E' , jpramp: "搭乘直昇機"},
+	{ coords: [764.19, 466.20], "label": "弥彦(彌彥)-直昇機車站", "info": "可以飛往東日本其中4處的直昇機車站。", group: 'C', mk: 'E' , jpramp: "搭乘直昇機"},
+	{ coords: [216.31, 379.58], "label": "牧之原-直昇機車站", "info": "可以飛往東日本其中4處的直昇機車站。", group: 'C', mk: 'E' , jpramp: "搭乘直昇機"},
+	{ coords: [951.69, 852.89], "label": "南三陸-直昇機車站", "info": "可以飛往東日本其中4處的直昇機車站。", group: 'C', mk: 'E' , jpramp: "搭乘直昇機"},
+	{ coords: [720.88, 203.33], "label": "能登-直昇機車站", "info": "可以飛往東日本其中4處的直昇機車站。", group: 'C', mk: 'E' , jpramp: "搭乘直昇機"},
+	{ coords: [1052.63, 645.33], "label": "にかほ(仁賀保)-直昇機車站", "info": "可以飛往東日本其中4處的直昇機車站。", group: 'C', mk: 'E' , jpramp: "搭乘直昇機"},
+	],
+//重置周遊車站F
+	phoenix_battery: [
+	{ coords: [367.50, 839.08], "label": "大網白里-重置周遊車站", "info": "<table class='bordered-table'><tr><td>重置含周遊系列</td><td>使用回數(建議回數)</td></tr><tr><td>急行/特急/新幹線/のぞみ周遊(2顆/3顆/5顆/6顆骰子)</td><td>5以上(建議4回重置)</td></tr><tr><td>はやぶさ周遊(7顆骰子)</td><td>7以上(建議6回重置)</td></tr><tr><td>リニア周遊(10顆骰子)</td><td>9以上(建議8回重置)</td></tr><tr><td>ぶっとび/物件飛び周遊(隨機飛行/飛往物件)</td><td>5以上(建議4回重置)</td></tr><tr><td>☆飛び周遊(卡片賣場)</td><td>7以上(建議6回重置)</td></tr><tr><td>スペシャルズ(指定骰子1~6)</td><td>5以上(建議4回重置)</td></tr><tr><td>強奪飛び/乗っ取り周遊(搶走物件/搶占物件)</td><td>5以上(建議4回重置)</td></tr></table>", group: 'C', mk: 'F' , jpname: ""},
+	{ coords: [1579.00, 728.39], "label": "昆布-重置周遊車站", "info": "<table class='bordered-table'><tr><td>重置含周遊系列</td><td>使用回數(建議回數)</td></tr><tr><td>急行/特急/新幹線/のぞみ周遊(2顆/3顆/5顆/6顆骰子)</td><td>5以上(建議4回重置)</td></tr><tr><td>はやぶさ周遊(7顆骰子)</td><td>7以上(建議6回重置)</td></tr><tr><td>リニア周遊(10顆骰子)</td><td>9以上(建議8回重置)</td></tr><tr><td>ぶっとび/物件飛び周遊(隨機飛行/飛往物件)</td><td>5以上(建議4回重置)</td></tr><tr><td>☆飛び周遊(卡片賣場)</td><td>7以上(建議6回重置)</td></tr><tr><td>スペシャルズ(指定骰子1~6)</td><td>5以上(建議4回重置)</td></tr><tr><td>強奪飛び/乗っ取り周遊(搶走物件/搶占物件)</td><td>5以上(建議4回重置)</td></tr></table>", group: 'C', mk: 'F' , jpname: ""},
+	{ coords: [1651.19, 728.26], "label": "神威-重置周遊車站", "info": "<table class='bordered-table'><tr><td>重置含周遊系列</td><td>使用回數(建議回數)</td></tr><tr><td>急行/特急/新幹線/のぞみ周遊(2顆/3顆/5顆/6顆骰子)</td><td>5以上(建議4回重置)</td></tr><tr><td>はやぶさ周遊(7顆骰子)</td><td>7以上(建議6回重置)</td></tr><tr><td>リニア周遊(10顆骰子)</td><td>9以上(建議8回重置)</td></tr><tr><td>ぶっとび/物件飛び周遊(隨機飛行/飛往物件)</td><td>5以上(建議4回重置)</td></tr><tr><td>☆飛び周遊(卡片賣場)</td><td>7以上(建議6回重置)</td></tr><tr><td>スペシャルズ(指定骰子1~6)</td><td>5以上(建議4回重置)</td></tr><tr><td>強奪飛び/乗っ取り周遊(搶走物件/搶占物件)</td><td>5以上(建議4回重置)</td></tr></table>", group: 'C', mk: 'F' , jpname: ""},
+	{ coords: [1636.69, 728.26], "label": "神恵内(神惠內)-重置周遊車站", "info": "<table class='bordered-table'><tr><td>重置含周遊系列</td><td>使用回數(建議回數)</td></tr><tr><td>急行/特急/新幹線/のぞみ周遊(2顆/3顆/5顆/6顆骰子)</td><td>5以上(建議4回重置)</td></tr><tr><td>はやぶさ周遊(7顆骰子)</td><td>7以上(建議6回重置)</td></tr><tr><td>リニア周遊(10顆骰子)</td><td>9以上(建議8回重置)</td></tr><tr><td>ぶっとび/物件飛び周遊(隨機飛行/飛往物件)</td><td>5以上(建議4回重置)</td></tr><tr><td>☆飛び周遊(卡片賣場)</td><td>7以上(建議6回重置)</td></tr><tr><td>スペシャルズ(指定骰子1~6)</td><td>5以上(建議4回重置)</td></tr><tr><td>強奪飛び/乗っ取り周遊(搶走物件/搶占物件)</td><td>5以上(建議4回重置)</td></tr></table>", group: 'C', mk: 'F' , jpname: ""},
+	],
+//卡片複製車站G
+	phoenix_copy: [
+	{ coords: [410.75, 825.14], "label": "千原台-卡片複製車站", "info": "可以複製1張卡片。", group: 'C', mk: 'G' , jpname: ""},
+	{ coords: [1341.06, 728.39], "label": "外ヶ浜(外濱)-卡片複製車站", "info": "可以複製1張卡片。", group: 'C', mk: 'G' , jpname: ""},
+	{ coords: [1564.63, 977.26], "label": "幸福-卡片複製車站", "info": "可以複製1張卡片。", group: 'C', mk: 'G' , jpname: ""},
+	{ coords: [598.19, 866.58], "label": "虎塚-卡片複製車站", "info": "可以複製1張卡片。", group: 'C', mk: 'G' , jpname: ""},
+	{ coords: [764.19, 784.08], "label": "棚倉-卡片複製車站", "info": "可以複製1張卡片。", group: 'C', mk: 'G' , jpname: ""},
+	{ coords: [1579.06, 977.20], "label": "愛國-卡片複製車站", "info": "可以複製1張卡片。", group: 'C', mk: 'G' , jpname: ""},
+	],
+//抽獎彩券車站H
+	phoenix_lottery: [
+	{ coords: [865.19, 866.70], "label": "岩沼-抽獎彩券車站", "info": "可以用拉霸機挑戰摸彩的車站", group: 'C', mk: 'H' , jpname: ""},
+	{ coords: [793.00, 673.39], "label": "柳津-抽獎彩券車站", "info": "可以用拉霸機挑戰摸彩的車站", group: 'C', mk: 'H' , jpname: ""},
+	{ coords: [980.38, 714.76], "label": "真室川-抽獎彩券車站", "info": "可以用拉霸機挑戰摸彩的車站", group: 'C', mk: 'H' , jpname: ""},
+	{ coords: [1167.94, 880.51], "label": "野田-抽獎彩券車站", "info": "可以用拉霸機挑戰摸彩的車站", group: 'C', mk: 'H' , jpname: ""},
+	{ coords: [749.88, 424.64], "label": "頸城-抽獎彩券車站", "info": "可以用拉霸機挑戰摸彩的車站", group: 'C', mk: 'H' , jpname: ""},
+	],
+//好卡片車站I
+	phoenix_ncard: [
+	{ coords: [1723.38, 1060.20], "label": "小清水-好卡片車站", "info": "比起普通的卡片車站，有更高機率獲得好卡片的車站。<br>(好運狀態中，好卡片車站都變成超級卡片車站)", group: 'C', mk: 'I' , jpname: ""},
+	{ coords: [324.38, 770.26], "label": "太海-好卡片車站", "info": "比起普通的卡片車站，有更高機率獲得好卡片的車站。<br>(好運狀態中，好卡片車站都變成超級卡片車站)", group: 'C', mk: 'I' , jpname: ""},
+	{ coords: [324.38, 784.01], "label": "和田-好卡片車站", "info": "比起普通的卡片車站，有更高機率獲得好卡片的車站。<br>(好運狀態中，好卡片車站都變成超級卡片車站)", group: 'C', mk: 'I' , jpname: ""},
+	{ coords: [1651.31, 1157.01], "label": "花咲町-好卡片車站", "info": "比起普通的卡片車站，有更高機率獲得好卡片的車站。<br>(好運狀態中，好卡片車站都變成超級卡片車站)", group: 'C', mk: 'I' , jpname: ""},
+	{ coords: [1867.44, 852.83], "label": "幌延-好卡片車站", "info": "比起普通的卡片車站，有更高機率獲得好卡片的車站。<br>(好運狀態中，好卡片車站都變成超級卡片車站)", group: 'C', mk: 'I' , jpname: ""},
+	{ coords: [1723.38, 1101.70], "label": "ウトロ(宇登路)-好卡片車站", "info": "比起普通的卡片車站，有更高機率獲得好卡片的車站。<br>(好運狀態中，好卡片車站都變成超級卡片車站)", group: 'C', mk: 'I' , jpname: ""},
+	],
+//尋找八大芭蕉俳句!事件K haiku 
+	phoenix_haiku: [
+	{ coords: [994.75, 797.54], "label": "平泉-平泉俳句", "info": "（完成：擁有的物件收益率2倍）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>平泉（岩手県）</td><td>平泉俳句</td></tr><tr><td>扣錢車站(新庄車站右2格)（山形県）</td><td>尿前俳句</td></tr><tr><td>卡片車站(作並車站左2格)（宮城県）</td><td>山寺俳句</td></tr><tr><td>仙台（宮城県）</td><td>仙台俳句</td></tr><tr><td>酒田（山形県）</td><td>酒田俳句</td></tr><tr><td>扣錢車站(鶴岡車站右1格)（山形県）</td><td>羽黒山俳句</td></tr><tr><td>須賀川（福島県）</td><td>須賀川俳句</td></tr><tr><td>福島（福島県）</td><td>福島俳句</td></tr></table>", group: 'C', mk: 'K' , jphaiku: "八大芭蕉俳句"},
+	{ coords: [965.88, 742.56], "label": "扣錢車站(新庄車站右2格)-尿前俳句", "info": "（完成：擁有的物件收益率2倍）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>平泉（岩手県）</td><td>平泉俳句</td></tr><tr><td>扣錢車站(新庄車站右2格)（山形県）</td><td>尿前俳句</td></tr><tr><td>卡片車站(作並車站左2格)（宮城県）</td><td>山寺俳句</td></tr><tr><td>仙台（宮城県）</td><td>仙台俳句</td></tr><tr><td>酒田（山形県）</td><td>酒田俳句</td></tr><tr><td>扣錢車站(鶴岡車站右1格)（山形県）</td><td>羽黒山俳句</td></tr><tr><td>須賀川（福島県）</td><td>須賀川俳句</td></tr><tr><td>福島（福島県）</td><td>福島俳句</td></tr></table>", group: 'F', mk: 'K' , jphaiku: "八大芭蕉俳句"},
+	{ coords: [908.13, 742.63], "label": "卡片車站(作並車站左2格)-山寺俳句", "info": "（完成：擁有的物件收益率2倍）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>平泉（岩手県）</td><td>平泉俳句</td></tr><tr><td>扣錢車站(新庄車站右2格)（山形県）</td><td>尿前俳句</td></tr><tr><td>卡片車站(作並車站左2格)（宮城県）</td><td>山寺俳句</td></tr><tr><td>仙台（宮城県）</td><td>仙台俳句</td></tr><tr><td>酒田（山形県）</td><td>酒田俳句</td></tr><tr><td>扣錢車站(鶴岡車站右1格)（山形県）</td><td>羽黒山俳句</td></tr><tr><td>須賀川（福島県）</td><td>須賀川俳句</td></tr><tr><td>福島（福島県）</td><td>福島俳句</td></tr></table>", group: 'E', mk: 'K' , jphaiku: "八大芭蕉俳句"},
+	{ coords: [893.81, 797.54], "label": "仙台-仙台俳句", "info": "（完成：擁有的物件收益率2倍）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>平泉（岩手県）</td><td>平泉俳句</td></tr><tr><td>扣錢車站(新庄車站右2格)（山形県）</td><td>尿前俳句</td></tr><tr><td>卡片車站(作並車站左2格)（宮城県）</td><td>山寺俳句</td></tr><tr><td>仙台（宮城県）</td><td>仙台俳句</td></tr><tr><td>酒田（山形県）</td><td>酒田俳句</td></tr><tr><td>扣錢車站(鶴岡車站右1格)（山形県）</td><td>羽黒山俳句</td></tr><tr><td>須賀川（福島県）</td><td>須賀川俳句</td></tr><tr><td>福島（福島県）</td><td>福島俳句</td></tr></table>", group: 'E', mk: 'K' , jphaiku: "八大芭蕉俳句"},
+	{ coords: [980.13, 628.16], "label": "酒田-酒田俳句", "info": "（完成：擁有的物件收益率2倍）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>平泉（岩手県）</td><td>平泉俳句</td></tr><tr><td>扣錢車站(新庄車站右2格)（山形県）</td><td>尿前俳句</td></tr><tr><td>卡片車站(作並車站左2格)（宮城県）</td><td>山寺俳句</td></tr><tr><td>仙台（宮城県）</td><td>仙台俳句</td></tr><tr><td>酒田（山形県）</td><td>酒田俳句</td></tr><tr><td>扣錢車站(鶴岡車站右1格)（山形県）</td><td>羽黒山俳句</td></tr><tr><td>須賀川（福島県）</td><td>須賀川俳句</td></tr><tr><td>福島（福島県）</td><td>福島俳句</td></tr></table>", group: 'F', mk: 'K' , jphaiku: "八大芭蕉俳句"},
+	{ coords: [951.15, 646.03], "label": "扣錢車站(鶴岡車站右1格)-羽黒山俳句", "info": "（完成：擁有的物件收益率2倍）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>平泉（岩手県）</td><td>平泉俳句</td></tr><tr><td>扣錢車站(新庄車站右2格)（山形県）</td><td>尿前俳句</td></tr><tr><td>卡片車站(作並車站左2格)（宮城県）</td><td>山寺俳句</td></tr><tr><td>仙台（宮城県）</td><td>仙台俳句</td></tr><tr><td>酒田（山形県）</td><td>酒田俳句</td></tr><tr><td>扣錢車站(鶴岡車站右1格)（山形県）</td><td>羽黒山俳句</td></tr><tr><td>須賀川（福島県）</td><td>須賀川俳句</td></tr><tr><td>福島（福島県）</td><td>福島俳句</td></tr></table>", group: 'E', mk: 'K' , jphaiku: "八大芭蕉俳句"},
+	{ coords: [792.75, 728.48], "label": "須賀川-須賀川俳句", "info": "（完成：擁有的物件收益率2倍）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>平泉（岩手県）</td><td>平泉俳句</td></tr><tr><td>扣錢車站(新庄車站右2格)（山形県）</td><td>尿前俳句</td></tr><tr><td>卡片車站(作並車站左2格)（宮城県）</td><td>山寺俳句</td></tr><tr><td>仙台（宮城県）</td><td>仙台俳句</td></tr><tr><td>酒田（山形県）</td><td>酒田俳句</td></tr><tr><td>扣錢車站(鶴岡車站右1格)（山形県）</td><td>羽黒山俳句</td></tr><tr><td>須賀川（福島県）</td><td>須賀川俳句</td></tr><tr><td>福島（福島県）</td><td>福島俳句</td></tr></table>", group: 'G', mk: 'K' , jphaiku: "八大芭蕉俳句"},
+	{ coords: [836.00, 728.35], "label": "福島-福島俳句", "info": "（完成：擁有的物件收益率2倍）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>平泉（岩手県）</td><td>平泉俳句</td></tr><tr><td>扣錢車站(新庄車站右2格)（山形県）</td><td>尿前俳句</td></tr><tr><td>卡片車站(作並車站左2格)（宮城県）</td><td>山寺俳句</td></tr><tr><td>仙台（宮城県）</td><td>仙台俳句</td></tr><tr><td>酒田（山形県）</td><td>酒田俳句</td></tr><tr><td>扣錢車站(鶴岡車站右1格)（山形県）</td><td>羽黒山俳句</td></tr><tr><td>須賀川（福島県）</td><td>須賀川俳句</td></tr><tr><td>福島（福島県）</td><td>福島俳句</td></tr></table>", group: 'G', mk: 'K' , jphaiku: "八大芭蕉俳句"},
+	],
+//尋找八大市場!事件L mart
+	phoenix_mart: [
+	{ coords: [1593.19, 1060.25], "label": "釧路-釧路市場", "info": "（第55年4月以後事件）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>釧路（北海道）</td><td>釧路市場</td></tr><tr><td>函館（北海道）</td><td>函館市場</td></tr><tr><td>塩釜（宮城県）</td><td>塩釜市場</td></tr><tr><td>秋田（秋田県）</td><td>秋田市場</td></tr><tr><td>加錢車站(東京右2格後上1格)（東京都）</td><td>豊洲市場</td></tr><tr><td>小田原（神奈川県）</td><td>小田原市場</td></tr><tr><td>三国（福井県）</td><td>三国市場</td></tr><tr><td>焼津（静岡県）</td><td>焼津市場</td></tr></table>", group: 'A', mk: 'L' , jpmart: "八大市場"},
+	{ coords: [1463.63, 755.88], "label": "函館-函館市場", "info": "（第55年4月以後事件）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>釧路（北海道）</td><td>釧路市場</td></tr><tr><td>函館（北海道）</td><td>函館市場</td></tr><tr><td>塩釜（宮城県）</td><td>塩釜市場</td></tr><tr><td>秋田（秋田県）</td><td>秋田市場</td></tr><tr><td>加錢車站(東京右2格後上1格)（東京都）</td><td>豊洲市場</td></tr><tr><td>小田原（神奈川県）</td><td>小田原市場</td></tr><tr><td>三国（福井県）</td><td>三国市場</td></tr><tr><td>焼津（静岡県）</td><td>焼津市場</td></tr></table>", group: 'A', mk: 'L' , jpmart: "八大市場"},
+	{ coords: [908.06, 811.41], "label": "塩釜-塩釜市場", "info": "（第55年4月以後事件）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>釧路（北海道）</td><td>釧路市場</td></tr><tr><td>函館（北海道）</td><td>函館市場</td></tr><tr><td>塩釜（宮城県）</td><td>塩釜市場</td></tr><tr><td>秋田（秋田県）</td><td>秋田市場</td></tr><tr><td>加錢車站(東京右2格後上1格)（東京都）</td><td>豊洲市場</td></tr><tr><td>小田原（神奈川県）</td><td>小田原市場</td></tr><tr><td>三国（福井県）</td><td>三国市場</td></tr><tr><td>焼津（静岡県）</td><td>焼津市場</td></tr></table>", group: 'E', mk: 'L' , jpmart: "八大市場"},
+	{ coords: [1110.13, 659.29], "label": "秋田-秋田市場", "info": "（第55年4月以後事件）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>釧路（北海道）</td><td>釧路市場</td></tr><tr><td>函館（北海道）</td><td>函館市場</td></tr><tr><td>塩釜（宮城県）</td><td>塩釜市場</td></tr><tr><td>秋田（秋田県）</td><td>秋田市場</td></tr><tr><td>加錢車站(東京右2格後上1格)（東京都）</td><td>豊洲市場</td></tr><tr><td>小田原（神奈川県）</td><td>小田原市場</td></tr><tr><td>三国（福井県）</td><td>三国市場</td></tr><tr><td>焼津（静岡県）</td><td>焼津市場</td></tr></table>", group: 'D', mk: 'L' , jpmart: "八大市場"},
+	{ coords: [425.06, 729], "label": "加錢車站(東京右2格後上1格)-豊洲市場", "info": "（第55年4月以後事件）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>釧路（北海道）</td><td>釧路市場</td></tr><tr><td>函館（北海道）</td><td>函館市場</td></tr><tr><td>塩釜（宮城県）</td><td>塩釜市場</td></tr><tr><td>秋田（秋田県）</td><td>秋田市場</td></tr><tr><td>加錢車站(東京右2格後上1格)（東京都）</td><td>豊洲市場</td></tr><tr><td>小田原（神奈川県）</td><td>小田原市場</td></tr><tr><td>三国（福井県）</td><td>三国市場</td></tr><tr><td>焼津（静岡県）</td><td>焼津市場</td></tr></table>", group: 'N', mk: 'L' , jpmart: "八大市場"},
+	{ coords: [324.25, 552.64], "label": "小田原-小田原市場", "info": "（第55年4月以後事件）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>釧路（北海道）</td><td>釧路市場</td></tr><tr><td>函館（北海道）</td><td>函館市場</td></tr><tr><td>塩釜（宮城県）</td><td>塩釜市場</td></tr><tr><td>秋田（秋田県）</td><td>秋田市場</td></tr><tr><td>加錢車站(東京右2格後上1格)（東京都）</td><td>豊洲市場</td></tr><tr><td>小田原（神奈川県）</td><td>小田原市場</td></tr><tr><td>三国（福井県）</td><td>三国市場</td></tr><tr><td>焼津（静岡県）</td><td>焼津市場</td></tr></table>", group: 'O', mk: 'L' , jpmart: "八大市場"},
+	{ coords: [576.69, 134.39], "label": "三国-三国市場", "info": "（第55年4月以後事件）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>釧路（北海道）</td><td>釧路市場</td></tr><tr><td>函館（北海道）</td><td>函館市場</td></tr><tr><td>塩釜（宮城県）</td><td>塩釜市場</td></tr><tr><td>秋田（秋田県）</td><td>秋田市場</td></tr><tr><td>加錢車站(東京右2格後上1格)（東京都）</td><td>豊洲市場</td></tr><tr><td>小田原（神奈川県）</td><td>小田原市場</td></tr><tr><td>三国（福井県）</td><td>三国市場</td></tr><tr><td>焼津（静岡県）</td><td>焼津市場</td></tr></table>", group: 'U', mk: 'L' , jpmart: "八大市場"},
+	{ coords: [252.19, 435.08], "label": "焼津-焼津市場", "info": "（第55年4月以後事件）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>釧路（北海道）</td><td>釧路市場</td></tr><tr><td>函館（北海道）</td><td>函館市場</td></tr><tr><td>塩釜（宮城県）</td><td>塩釜市場</td></tr><tr><td>秋田（秋田県）</td><td>秋田市場</td></tr><tr><td>加錢車站(東京右2格後上1格)（東京都）</td><td>豊洲市場</td></tr><tr><td>小田原（神奈川県）</td><td>小田原市場</td></tr><tr><td>三国（福井県）</td><td>三国市場</td></tr><tr><td>焼津（静岡県）</td><td>焼津市場</td></tr></table>", group: 'S', mk: 'L' , jpmart: "八大市場"},
+	],
+//各類事件M
+	phoenix_sp: [
+	{ coords: [1563.88, 803.69], "label": "東日本溫泉-事件", "info": "「溫泉」事件<table class='bordered-table'><tr><td>地點</td><td>溫泉（兵庫県）</td></tr><tr><td>條件</td><td>10年4月以後，使用「放大鏡」查看</td></tr></table>", group: 'A', mk: 'M' , jpsp: "事件"},
+	{ coords: [526.00, 866.66], "label": "鹿嶋-訪問紀念", "info": "「鹿嶋市的起源」訪問紀念<table class='bordered-table'><tr><td>地點</td><td>鹿嶋（茨城縣）</td></tr><tr><td>效果</td><td>獲得「特急卡」(3顆骰子)。</td></tr><tr><td>條件</td><td>停留「鹿嶋」物件車站</td></tr><tr><td>限定</td><td>一場遊戲只會發生1次</td></tr></table>", group: 'I', mk: 'M' , jpsp: "訪問紀念"},
+	{ coords: [1463.63, 755.88], "label": "函館-訪問紀念", "info": "「舊函館區公會堂」訪問紀念<table class='bordered-table'><tr><td>地點</td><td>函館（北海道）</td></tr><tr><td>效果</td><td>獲得「新幹線卡」(5顆骰子)。</td></tr><tr><td>條件</td><td>停留「函館」物件車站</td></tr><tr><td>限定</td><td>一場遊戲只會發生1次</td></tr></table>", group: 'A', mk: 'M' , jpsp: "訪問紀念"},
+	{ coords: [454.06, 438.35], "label": "甲府-事件", "info": "「寶石工廠鑽石」事件<table class='bordered-table'><tr><td>地點</td><td>甲府（山梨縣）</td></tr><tr><td>獨占物件名稱</td><td>「宝石工場」物件</td></tr><tr><td>獨占物件金額</td><td>20億</td></tr><tr><td>效果</td><td>獲得「好酒沉甕鑽石卡」。</td></tr><tr><td>限定</td><td>一場遊戲只會發生1次</td></tr></table>", group: 'R', mk: 'M' , jpsp: "事件"},
+	{ coords: [526.13, 645.66], "label": "浦和-知識挑戰", "info": "「車站名稱」知識挑戰<table class='bordered-table'><tr><td>地點</td><td>浦和（埼玉縣）</td></tr><tr><td>題目</td><td>回答「實際不存在的車站?」</td></tr><tr><td>條件</td><td>停留「浦和」物件車站</td></tr><tr><td>回答正確答案</td><td>獲得「特急周遊卡」。</td></tr><tr><td>回答錯誤答案</td><td>獲得「原地踏步卡」。</td></tr><tr><td>正確答案</td><td>新浦和｜浦和中央｜常陸浦和｜浦和郡山｜与野浦和｜埼玉浦和</td></tr><tr><td>限定</td><td>一場遊戲只會發生1次</td></tr></table>", group: 'M', mk: 'M' , jpsp: "知識挑戰"},
+	{ coords: [673.94, 645.79], "label": "日光-知識挑戰", "info": "「德川15代將軍」知識挑戰<table class='bordered-table'><tr><td>地點</td><td>日光（栃木縣）</td></tr><tr><td>題目</td><td>回答「德川15代中的將軍，是第幾代?」</td></tr><tr><td>條件</td><td>停留「日光」物件車站，高機率，可重複挑戰。</td></tr><tr><td>回答正確答案</td><td>獲得隨機1張卡片。<br>（「特急卡」/「特急周遊卡」/「時效延長卡」/「原地踏步卡」）</td></tr><tr><td>回答錯誤答案</td><td>沒任何影響。</td></tr><tr><td>正確答案</td><td>秀忠 (2代)｜家光 (3代)｜家綱 (4代)｜綱吉 (5代)｜家宣 (6代)｜家継 (7代)｜吉宗 (8代)｜家重 (9代)｜家治 (10代)｜家斉 (11代)｜家慶 (12代)｜家定 (13代)｜家茂 (14代)｜慶喜 (15代)</td></tr></table>", group: 'J', mk: 'M' , jpsp: "知識挑戰"},
+	{ coords: [1052.44, 797.54], "label": "花巻(花卷)-知識挑戰", "info": "「宮沢賢治」知識挑戰<table class='bordered-table'><tr><td>地點</td><td>花巻(花卷)（岩手縣）</td></tr><tr><td>題目</td><td>回答「宮沢賢治的代表作品名稱?」</td></tr><tr><td>條件</td><td>停留「花卷」物件車站，高機率，可重複挑戰。</td></tr><tr><td>回答正確答案</td><td>獲得隨機1張卡片。<br>（「特急卡」/「原地踏步卡」/「新幹線卡」/「持有資金歸零卡」）</td></tr><tr><td>回答錯誤答案</td><td>沒任何影響。</td></tr><tr><td>正確答案</td><td>雨ニモマケズ｜春と修羅｜風の又三郎｜注文の多い料理店｜セロ弾きのゴーシュ｜よだかの星｜どんぐりと山猫</td></tr></table>", group: 'C', mk: 'M' , jpsp: "知識挑戰"},
+	{ coords: [663.13, 244.85], "label": "砺波(礪波)-事件", "info": "「瀏海棒球男」事件<table class='bordered-table'><tr><td>地點</td><td>砺波(礪波)（富山縣）</td></tr><tr><td>獨占物件名稱</td><td>「バット工場」物件</td></tr><tr><td>獨占物件金額</td><td>5億</td></tr><tr><td>效果</td><td>高機率，無效化「快速球卡」。</td></tr></table>", group: 'Q', mk: 'M' , jpsp: "事件"},
+	],
+//卡片銀行車站N
+	phoenix_bank: [
+	{ coords: [1520.81, 687.25], "label": "瀨棚-卡片銀行車站", "info": "（第16年4月以後，之前為扣錢車站）<table class='bordered-table'><tr><td>地點</td><td>瀨棚（北海道）</td></tr><tr><td>基本<br>功能</td><td>最多可以存放16張卡片在銀行，能隨時取出。<br>（條件：停留車站）</td></tr><tr><td>升級<br>功能</td><td>升級為最多可以存放32張卡片在銀行。<br>（條件：持有1兆後，支付1兆後）</td></tr><tr><td>低機率事件</td><td>銀行有空位，送貨員能儲存卡片到銀行。<br>（條件：2年1次，持有8張卡片）</td></tr><tr><td>高機率事件</td><td>抵達目的地獎勵的卡片，送貨員能儲存卡片到銀行。<br>（條件：持有8張卡片）</td></tr></table>", group: 'Q', mk: 'N' , jpbank: ""},
+	],
+//九大甜蜜地點Q
+	phoenix_sugar: [
+	{ coords: [662.25, 254.81], "label": "小倉-小倉甜蜜", "info": "（特殊事件：不會有觸發事件條件，無法查看已走過，要自己記得）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>小倉（福岡県）</td><td>小倉甜蜜</td></tr><tr><td>直方（福岡県）</td><td>直方甜蜜</td></tr><tr><td>田川（福岡県）</td><td>田川甜蜜</td></tr><tr><td>飯塚（福岡県）</td><td>飯塚甜蜜</td></tr><tr><td>佐賀（佐賀県）</td><td>佐賀甜蜜</td></tr><tr><td>小城（佐賀県）</td><td>小城甜蜜</td></tr><tr><td>嬉野（佐賀県）</td><td>嬉野甜蜜</td></tr><tr><td>大村（長崎県）</td><td>大村甜蜜</td></tr><tr><td>長崎（長崎県）</td><td>長崎甜蜜</td></tr></table>", group: 'Q', mk: 'Q' , jpsugar: "九大甜蜜"},
+	{ coords: [651.78, 245.34], "label": "直方-直方甜蜜", "info": "（特殊事件：不會有觸發事件條件，無法查看已走過，要自己記得）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>小倉（福岡県）</td><td>小倉甜蜜</td></tr><tr><td>直方（福岡県）</td><td>直方甜蜜</td></tr><tr><td>田川（福岡県）</td><td>田川甜蜜</td></tr><tr><td>飯塚（福岡県）</td><td>飯塚甜蜜</td></tr><tr><td>佐賀（佐賀県）</td><td>佐賀甜蜜</td></tr><tr><td>小城（佐賀県）</td><td>小城甜蜜</td></tr><tr><td>嬉野（佐賀県）</td><td>嬉野甜蜜</td></tr><tr><td>大村（長崎県）</td><td>大村甜蜜</td></tr><tr><td>長崎（長崎県）</td><td>長崎甜蜜</td></tr></table>", group: 'Q', mk: 'Q' , jpsugar: "九大甜蜜"},
+	{ coords: [641.41, 254.84], "label": "田川-田川甜蜜", "info": "（特殊事件：不會有觸發事件條件，無法查看已走過，要自己記得）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>小倉（福岡県）</td><td>小倉甜蜜</td></tr><tr><td>直方（福岡県）</td><td>直方甜蜜</td></tr><tr><td>田川（福岡県）</td><td>田川甜蜜</td></tr><tr><td>飯塚（福岡県）</td><td>飯塚甜蜜</td></tr><tr><td>佐賀（佐賀県）</td><td>佐賀甜蜜</td></tr><tr><td>小城（佐賀県）</td><td>小城甜蜜</td></tr><tr><td>嬉野（佐賀県）</td><td>嬉野甜蜜</td></tr><tr><td>大村（長崎県）</td><td>大村甜蜜</td></tr><tr><td>長崎（長崎県）</td><td>長崎甜蜜</td></tr></table>", group: 'Q', mk: 'Q' , jpsugar: "九大甜蜜"},
+	{ coords: [641.41, 245.43], "label": "飯塚-飯塚甜蜜", "info": "（特殊事件：不會有觸發事件條件，無法查看已走過，要自己記得）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>小倉（福岡県）</td><td>小倉甜蜜</td></tr><tr><td>直方（福岡県）</td><td>直方甜蜜</td></tr><tr><td>田川（福岡県）</td><td>田川甜蜜</td></tr><tr><td>飯塚（福岡県）</td><td>飯塚甜蜜</td></tr><tr><td>佐賀（佐賀県）</td><td>佐賀甜蜜</td></tr><tr><td>小城（佐賀県）</td><td>小城甜蜜</td></tr><tr><td>嬉野（佐賀県）</td><td>嬉野甜蜜</td></tr><tr><td>大村（長崎県）</td><td>大村甜蜜</td></tr><tr><td>長崎（長崎県）</td><td>長崎甜蜜</td></tr></table>", group: 'Q', mk: 'Q' , jpsugar: "九大甜蜜"},
+	{ coords: [610.19, 207.74], "label": "佐賀-佐賀甜蜜", "info": "（特殊事件：不會有觸發事件條件，無法查看已走過，要自己記得）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>小倉（福岡県）</td><td>小倉甜蜜</td></tr><tr><td>直方（福岡県）</td><td>直方甜蜜</td></tr><tr><td>田川（福岡県）</td><td>田川甜蜜</td></tr><tr><td>飯塚（福岡県）</td><td>飯塚甜蜜</td></tr><tr><td>佐賀（佐賀県）</td><td>佐賀甜蜜</td></tr><tr><td>小城（佐賀県）</td><td>小城甜蜜</td></tr><tr><td>嬉野（佐賀県）</td><td>嬉野甜蜜</td></tr><tr><td>大村（長崎県）</td><td>大村甜蜜</td></tr><tr><td>長崎（長崎県）</td><td>長崎甜蜜</td></tr></table>", group: 'T', mk: 'Q' , jpsugar: "九大甜蜜"},
+	{ coords: [620.59, 198.34], "label": "小城-小城甜蜜", "info": "（特殊事件：不會有觸發事件條件，無法查看已走過，要自己記得）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>小倉（福岡県）</td><td>小倉甜蜜</td></tr><tr><td>直方（福岡県）</td><td>直方甜蜜</td></tr><tr><td>田川（福岡県）</td><td>田川甜蜜</td></tr><tr><td>飯塚（福岡県）</td><td>飯塚甜蜜</td></tr><tr><td>佐賀（佐賀県）</td><td>佐賀甜蜜</td></tr><tr><td>小城（佐賀県）</td><td>小城甜蜜</td></tr><tr><td>嬉野（佐賀県）</td><td>嬉野甜蜜</td></tr><tr><td>大村（長崎県）</td><td>大村甜蜜</td></tr><tr><td>長崎（長崎県）</td><td>長崎甜蜜</td></tr></table>", group: 'T', mk: 'Q' , jpsugar: "九大甜蜜"},
+	{ coords: [599.81, 179.65], "label": "嬉野-嬉野甜蜜", "info": "（特殊事件：不會有觸發事件條件，無法查看已走過，要自己記得）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>小倉（福岡県）</td><td>小倉甜蜜</td></tr><tr><td>直方（福岡県）</td><td>直方甜蜜</td></tr><tr><td>田川（福岡県）</td><td>田川甜蜜</td></tr><tr><td>飯塚（福岡県）</td><td>飯塚甜蜜</td></tr><tr><td>佐賀（佐賀県）</td><td>佐賀甜蜜</td></tr><tr><td>小城（佐賀県）</td><td>小城甜蜜</td></tr><tr><td>嬉野（佐賀県）</td><td>嬉野甜蜜</td></tr><tr><td>大村（長崎県）</td><td>大村甜蜜</td></tr><tr><td>長崎（長崎県）</td><td>長崎甜蜜</td></tr></table>", group: 'T', mk: 'Q' , jpsugar: "九大甜蜜"},
+	{ coords: [568.59, 170.24], "label": "大村-大村甜蜜", "info": "（特殊事件：不會有觸發事件條件，無法查看已走過，要自己記得）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>小倉（福岡県）</td><td>小倉甜蜜</td></tr><tr><td>直方（福岡県）</td><td>直方甜蜜</td></tr><tr><td>田川（福岡県）</td><td>田川甜蜜</td></tr><tr><td>飯塚（福岡県）</td><td>飯塚甜蜜</td></tr><tr><td>佐賀（佐賀県）</td><td>佐賀甜蜜</td></tr><tr><td>小城（佐賀県）</td><td>小城甜蜜</td></tr><tr><td>嬉野（佐賀県）</td><td>嬉野甜蜜</td></tr><tr><td>大村（長崎県）</td><td>大村甜蜜</td></tr><tr><td>長崎（長崎県）</td><td>長崎甜蜜</td></tr></table>", group: 'U', mk: 'Q' , jpsugar: "九大甜蜜"},
+	{ coords: [537.38, 151.53], "label": "長崎-長崎甜蜜", "info": "（特殊事件：不會有觸發事件條件，無法查看已走過，要自己記得）<table class='bordered-table'><tr><td>地點</td><td>種類</td></tr><tr><td>小倉（福岡県）</td><td>小倉甜蜜</td></tr><tr><td>直方（福岡県）</td><td>直方甜蜜</td></tr><tr><td>田川（福岡県）</td><td>田川甜蜜</td></tr><tr><td>飯塚（福岡県）</td><td>飯塚甜蜜</td></tr><tr><td>佐賀（佐賀県）</td><td>佐賀甜蜜</td></tr><tr><td>小城（佐賀県）</td><td>小城甜蜜</td></tr><tr><td>嬉野（佐賀県）</td><td>嬉野甜蜜</td></tr><tr><td>大村（長崎県）</td><td>大村甜蜜</td></tr><tr><td>長崎（長崎県）</td><td>長崎甜蜜</td></tr></table>", group: 'U', mk: 'Q' , jpsugar: "九大甜蜜"},
+	],
+//機場P jpsky
+	phoenix_sky: [
+	{ coords: [482.81, 838.89], "label": "成田空港(成田機場)-機場車站", "info": "一定機率可以獲得卡片。<br>(停留都不會遇到扒手銀次)", group: 'C', mk: 'P' , jpname: ""},
+	{ coords: [1593.44, 825.14], "label": "新千歳空港(新千歲機場)-機場車站", "info": "一定機率可以獲得卡片。<br>(停留都不會遇到扒手銀次)", group: 'C', mk: 'P' , jpname: ""},
+	{ coords: [252.19, 151.45], "label": "セントレア空港(中部國際機場)-機場車站", "info": "一定機率可以獲得卡片。<br>(停留都不會遇到扒手銀次)", group: 'C', mk: 'P' , jpname: ""},
+	],
+//特殊-偷取卡片
+	phoenix_steal: [
+	{ coords: [475.75, 106.58], "label": "三方-剝奪卡片車佔", "info": "可以從其他人偷1張卡片。<br>效果：如同使用「剝奪卡」。", group: 'C', mk: 'G' , jpname: ""},
+	],	
+};
+
+// 初始化各分類標記容器
+var specificMarkers = {
+  A: [], B: [], C: [], D: [], E: [], F: [], G: [],
+  H: [], I: [], J: [], K: [], L: [], M: [], N: [], O: [],P: [],Q: [],R: []
+};
+
+// 新增標記函式
+function addMarkers(posArr, markerArr) {
+  posArr.forEach(pos => {
+    var marker = L.marker(pos.coords, { icon: createCustomIcon(pos.label, 10, groupColors[pos.group]) });
+    marker.bindPopup(`<strong>${pos.label}</strong><br>${pos.info}`);
+    marker.posData = pos;
+    markerArr.push(marker);
+  });
+}
+
+// 將所有位置加入標記容器
+Object.keys(positions).forEach(key => addMarkers(positions[key], specificMarkers[key]));
+
+// 建立各個群組
+var layerGroups = {};
+Object.keys(specificMarkers).forEach(group=>{
+  layerGroups[group]=L.layerGroup(specificMarkers[group]);
+});
+
+// G 類別特殊標記
+// 遍歷每個圖示類別
+Object.keys(colocopyMarkers).forEach(iconType => {
+  colocopyMarkers[iconType].forEach(item => {
+    var marker = L.marker(item.coords, { icon: icons[iconType] });
+    marker.bindPopup(`<strong>${item.label}</strong><br>${item.info}`);
+    marker.posData = item;
+
+    // 確保 mk 對應正確
+    if (!specificMarkers[item.mk]) specificMarkers[item.mk] = [];
+    specificMarkers[item.mk].push(marker);
+  });
+});
+
+// 建立每個 iconType 對應的圖層群組
+Object.keys(specificMarkers).forEach(key => {
+  layerGroups[key] = L.layerGroup(specificMarkers[key]);
+});
+
+// ✅ 建立「顯示所有物件」群組 (ALL)
+var allLayersGroup = L.layerGroup();
+Object.values(layerGroups).forEach(g=>{
+  allLayersGroup.addLayer(g);
+});
+layerGroups['ALL'] = allLayersGroup;
+
+// displayMappings 定義
+var displayMappings={
+  '顯示所有物件':'ALL',
+  '物件車站':'A','都道府縣廳':'B','卡片賣場車站(1-49年)':'C','卡片賣場車站(50年後)':'J',
+  '歷史英雄':'D','搭乘直昇機站':'E','重置周遊車站':'F','複製、偷取車站':'G','抽獎彩券車站':'H',
+  '好卡片車站':'I','卡片銀行車站':'N','各類事件':'M','八大俳句地點':'K','八大市場地點':'L',
+  '機場車站':'P',
+};
+
+// 控制項
+var controls=L.control.layers(null,null,{position:'topright'}).addTo(map);
+Object.keys(displayMappings).forEach(name=>{
+  var groupKey = displayMappings[name];
+  controls.addOverlay(layerGroups[groupKey], name);
+});
+
+map.addLayer(layerGroups['A']);
+
+// 搜尋功能
+var markers = [];
+
+// 先加入 specificMarkers 的標記
+Object.values(specificMarkers).forEach(arr => {
+  arr.forEach(m => {
+    markers.push({
+      name: m.posData.label,
+      coords: m.posData.coords,
+      marker: m
+    });
+  });
+});
+
+// 再加入 colocopyMarkers 裡的所有標記
+Object.keys(colocopyMarkers).forEach(iconType => {
+  colocopyMarkers[iconType].forEach(item => {
+    var marker = L.marker(item.coords, { icon: icons[iconType] });
+    marker.bindPopup(`<strong>${item.label}</strong><br>${item.info}`);
+    marker.posData = item;
+
+    // 用 iconType 當作 key，不管 mk
+    if (!specificMarkers[iconType]) specificMarkers[iconType] = [];
+    specificMarkers[iconType].push(marker);
+  });
+});
+
+var activePopups = [];
+var shownCoords = new Set();
+
+function showResults(keyword) {
+  var resultsDiv = document.getElementById('searchResults');
+  resultsDiv.innerHTML = "";
+
+  if (!keyword) return;
+
+  var range = document.getElementById('dropdown2').value;
+  var selectedMk = getMkByDropdown2(range);
+
+// showResults
+var results = markers.filter(m =>
+    m.name.includes(keyword)
+);
+
+
+  if (results.length === 0) {
+    resultsDiv.innerHTML = "<div>找不到結果</div>";
+    return;
+  }
+
+  if (results.length > 1) {
+    var openAll = document.createElement("div");
+    openAll.textContent = "📍 開啟全部結果";
+    openAll.style.fontWeight = "bold";
+    openAll.style.background = "#f8f8f8";
+    openAll.onclick = function () {
+      addAllPopups(results);
+    };
+    resultsDiv.appendChild(openAll);
+  }
+
+  results.forEach(r => {
+    var div = document.createElement("div");
+    div.textContent = r.name;
+    div.onclick = function () {
+      addPopup(r);
+      map.setView(r.coords, 2);
+    };
+    resultsDiv.appendChild(div);
+  });
+}
+
+function showJapaneseList(searchKey) {
+  var resultsDiv = document.getElementById('searchResults');
+  resultsDiv.innerHTML = "";  // 清空結果
+
+  var selectedMk = getMkByDropdown2(document.getElementById('dropdown2').value);
+  var seen = new Set();
+  var results = [];
+
+  markers.forEach(m => {
+    var label = m.marker.posData.label;
+    var data = m.marker.posData[searchKey];  // 根據選擇的 key 篩選資料
+
+    // 判斷 data 是否存在且非空白字串
+    if (typeof data !== "undefined" && data.trim() !== "" && !seen.has(label)) {
+      // 篩選 dropdown2
+
+    // showJapaneseList
+    if (!selectedMk || m.marker.posData.mk.split(',').includes(selectedMk)) {
+        seen.add(label);
+        results.push({
+            name: `${label} (${data})`,
+            coords: m.coords,
+            marker: m
+            });
+        }
+    }
+  });
+
+  if (results.length === 0) {
+    resultsDiv.innerHTML = "<div>沒有結果</div>";
+    return;
+  }
+
+// 過濾重複的位置 (這裡只保留最上面的一個標記)
+var uniqueResults = [];
+var seenCoords = new Set();
+
+results.forEach(r => {
+  var coordKey = r.coords.join(',');  // 以坐標作為唯一標識
+  if (!seenCoords.has(coordKey)) {
+    uniqueResults.push(r);  // 只保留第一個出現的標記
+    seenCoords.add(coordKey);  // 紀錄該坐標
+  }
+});
+
+
+  // 如果結果數量大於 1，顯示「開啟全部結果」按鈕
+  if (uniqueResults.length > 1) {
+    var openAllButton = document.createElement("div");
+    openAllButton.textContent = "📍 開啟全部結果";
+    openAllButton.style.fontWeight = "bold";
+    openAllButton.style.background = "#f8f8f8";
+    openAllButton.style.padding = "6px";
+    openAllButton.style.cursor = "pointer";
+    openAllButton.onclick = function() {
+      addAllPopups(uniqueResults);  // 顯示所有唯一的標記
+    };
+    resultsDiv.appendChild(openAllButton);
+  }
+
+  // 顯示搜尋結果
+  uniqueResults.forEach(r => {
+    var div = document.createElement("div");
+    div.textContent = r.name;
+    div.onclick = function () {
+      addPopup(r);  // 只會開啟唯一位置的第一個標記
+      map.setView(r.coords, 2);
+    };
+    resultsDiv.appendChild(div);
+  });
+}
+
+function addPopup(r) {
+  var key = r.coords.join(',');
+  if (shownCoords.has(key)) return;
+
+  var popup = L.popup({
+    autoClose: false,
+    closeOnClick: false
+  })
+    .setLatLng(r.coords)
+    .setContent("📍 " + r.name)
+    .openOn(map);
+
+  popup.on('remove', function() {
+    shownCoords.delete(key);  // 當 popup 被關掉時，從 shownCoords 移除
+    activePopups = activePopups.filter(p => p !== popup); // 同步 activePopups
+  });
+
+  activePopups.push(popup);
+  shownCoords.add(key);
+}
+
+function addAllPopups(results) {
+  var bnds = [];
+
+  results.forEach(r => {
+    var key = r.coords.join(',');
+
+    // 已經開過的座標就略過，避免重複開啟
+    if (shownCoords.has(key)) return;
+
+    var popup = L.popup({
+      autoClose: false,
+      closeOnClick: false
+    })
+      .setLatLng(r.coords)
+      .setContent("📍 " + r.name)
+      .openOn(map);
+
+    // 監聽移除時，清理追蹤
+    popup.on('remove', function () {
+      shownCoords.delete(key);
+      activePopups = activePopups.filter(p => p !== popup);
+    });
+
+    activePopups.push(popup);
+    shownCoords.add(key);
+    bnds.push(r.coords);
+  });
+
+  if (bnds.length > 1) {
+    map.fitBounds(bnds);
+  }
+}
+
+function toggleSearch(show) {
+  document.getElementById('searchContainer').style.display = show ? 'block' : 'none';
+  document.getElementById('toggleSearchBtn').style.display = show ? 'none' : 'inline-block';
+  if (show) document.getElementById('searchInput').focus();
+
+  setTimeout(() => {
+    map.invalidateSize();
+  }, 50);
+}
+
+// 事件綁定
+document.getElementById('toggleSearchBtn').onclick = () => toggleSearch(true);
+document.getElementById('closeSearchBtn').onclick = () => toggleSearch(false);
+
+document.getElementById('searchInput').addEventListener('input', function () {
+  showResults(this.value.trim());
+});
+
+document.getElementById('clearSearchBtn').addEventListener('click', function () {
+  // 清空搜尋欄位
+  document.getElementById('searchInput').value = "";
+  document.getElementById('searchResults').innerHTML = "";
+
+  // 關閉所有 popup
+  activePopups.forEach(p => map.closePopup(p));
+  activePopups = [];
+
+  // 清除所有顯示的坐標
+  shownCoords.clear();
+
+});
+
+document.getElementById('japaneseListBtn').addEventListener('click', showJapaneseList);
+    // 預設的選項
+    const dropdown2Options = {
+      station: [
+        { value: "all", label: "全國", mk: "A" },
+        { value: "abroad", label: "國外", mk: "I" },
+        { value: "hokkaido", label: "北海道", mk: "A" }
+      ],
+      market: [
+        { value: "all", label: "所有", mk: "G" },
+        { value: "market", label: "賣場", mk: "G" },
+        { value: "card", label: "卡片", mk: "G" }
+      ],
+      heroes: [
+        { value: "all", label: "全部英雄", mk: "D" },
+        { value: "high", label: "獨佔金額高", mk: "D" },
+        { value: "low", label: "獨佔金額低", mk: "D" }
+      ]
+    };
+
+    // 更新 dropdown2 的選項
+    function updateDropdown2(category) {
+      const dropdown2 = document.getElementById("dropdown2");
+      const options = dropdown2Options[category];
+
+      // 清空選項
+      dropdown2.innerHTML = "";
+
+      // 根據選擇的 category 添加選項
+      options.forEach(option => {
+        const opt = document.createElement("option");
+        opt.value = option.value;
+        opt.textContent = option.label;
+        dropdown2.appendChild(opt);
+      });
+
+      // 預設選擇第二個選單的第一個選項
+      dropdown2.value = options[0].value;
+      updateRangeInfo(options[0].label, options[0].mk);  // 預設顯示範圍
+    }
+
+    // 根據第二個選單選項的值來獲取對應的 mk
+function getMkByDropdown2(value) {
+  const dropdown2 = document.getElementById("dropdown2");
+  const selectedOption = [...dropdown2.options].find(option => option.value === value);
+  return selectedOption ? selectedOption.dataset.mk : null;
+}
+
+    // 更新範圍顯示
+
+    // 預設時載入第一個選項 "車站"
+  window.onload = function() {
+  // 預設選擇 "車站"
+  const defaultValue = "station";  // 預設為「車站」
+  document.getElementById("dropdown1").value = defaultValue;
+
+  // 更新按鈕名稱和第二個選單的選項
+  updateSearchButton(defaultValue);  // 這會根據 "車站" 更新按鈕名稱為 "日文地標"
+  updateDropdown2(defaultValue);    // 更新第二個下拉選單選項
+
+  // 預先觸發搜尋
+  showJapaneseList("jpname"); // 這會在頁面載入時顯示日文地標的結果
+};
+
+// 監聽 dropdown1 的變更
+document.getElementById("dropdown1").addEventListener("change", function() {
+  updateSearchButton(this.value);  // 更新按鈕名稱
+  updateDropdown2(this.value);     // 更新第二個下拉選單選項
+  showJapaneseList(getSearchKeyByCategory(this.value));  // 根據選擇的類別更新搜尋結果
+});
+
+// 根據選擇的類別返回相應的搜尋關鍵字
+function getSearchKeyByCategory(category) {
+  switch (category) {
+    case "station": return "jpname";
+    case "market": return "jpcard";
+    case "city": return "jpcity";
+	case "heroes": return "jphero";
+	case "monster": return "jpmonster";
+	case "haiku": return "jphaiku";
+	case "mart": return "jpmart";
+	case "sp": return "jpsp";
+    default: return "jpname";
+  }
+}
+
+    // 監聽 dropdown2 的變更，更新範圍
+    document.getElementById("dropdown2").addEventListener("change", function() {
+      const selectedValue = this.value;
+      const selectedMk = getMkByDropdown2(selectedValue);
+      updateRangeInfo(this.options[this.selectedIndex].text, selectedMk);
+    });
+  </script>
+</body>
+</html>
